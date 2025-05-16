@@ -136,7 +136,7 @@ export default function Panel() {
                                                 <SidebarMenuSub>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild>
-                                                            <Link href="">Tasks</Link>
+                                                            <Link href={`/org/projects/${project.id}/tasks`}>Tasks</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
