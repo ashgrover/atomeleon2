@@ -10,7 +10,7 @@ export default function AddProjectPage() {
         <div className="w-3xl mx-10 mt-5">
             <h1 className="text-2xl font-semibold">New Project</h1>
 
-            <div className="flex flex-col gap-8 mt-6">
+            <div className="flex flex-col gap-10 mt-10">
                 <div className="grid gap-3">
                     <Label htmlFor="title-label">Title</Label>
                     <Input type="text" id="title-label" aria-labelledby="title-label" />
@@ -19,6 +19,11 @@ export default function AddProjectPage() {
                 <div className="grid gap-3">
                     <Label htmlFor="desc-label">Description</Label>
                     <Textarea id="desc-label" aria-labelledby="desc-label" />
+                </div>
+
+                <div className="grid gap-3">
+                    <Label htmlFor="budget-label">Budget</Label>
+                    <Input type="number" id="title-label" aria-labelledby="budget-label" />
                 </div>
 
                 <div className="grid gap-3">

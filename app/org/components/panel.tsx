@@ -1,12 +1,14 @@
 "use client";
 
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
 import { Calendar, ChevronRight, File, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
 import Link from "next/link";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 type Project = {
+    id: string,
     title: string,
     url: string
 }
@@ -22,14 +24,17 @@ export default function Panel() {
     useEffect(() => {
         const projects = [
             {
+                id: "1",
                 title: "Project 1",
                 url: "#"
             },
             {
+                id: "2",
                 title: "Project 2",
                 url: "#"
             },
             {
+                id: "3",
                 title: "Project 3",
                 url: "#"
             },
@@ -38,17 +43,23 @@ export default function Panel() {
         setState(state => ({ ...state, projects: projects }));
     }, []);
 
+
     return (
         <SidebarProvider>
             <Sidebar collapsible="icon">
                 <SidebarHeader>
-                    <SidebarMenuButton asChild>
-                        <a href="#">
-                            <span className="text-base font-semibold">Atomeleon</span>
-                        </a>
-                    </SidebarMenuButton>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton asChild>
+                                <a href="#">
+                                    <span className="text-base font-semibold">Atomeleon</span>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
                 </SidebarHeader>
-                <SidebarContent>
+
+                <SidebarContent className="">
                     <SidebarGroup>
                         <SidebarGroupContent>
                             <SidebarMenu>
@@ -56,7 +67,7 @@ export default function Panel() {
                                     <SidebarMenuButton asChild>
                                         <a href="#">
                                             <Home />
-                                            <span>Home</span>
+                                            <span className="font-medium">Home</span>
                                         </a>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -65,7 +76,7 @@ export default function Panel() {
                                     <SidebarMenuButton asChild>
                                         <a href="#">
                                             <Calendar />
-                                            <span>Timesheets</span>
+                                            <span className="font-medium">Timesheets</span>
                                         </a>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -74,7 +85,7 @@ export default function Panel() {
                                     <SidebarMenuButton asChild>
                                         <a href="#">
                                             <Inbox />
-                                            <span>Contractors</span>
+                                            <span className="font-medium">Contractors</span>
                                         </a>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -83,47 +94,77 @@ export default function Panel() {
                                     <SidebarMenuButton asChild>
                                         <a href="#">
                                             <File />
-                                            <span>Documents</span>
+                                            <span className="font-medium">Documents</span>
                                         </a>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
-
-                                <Collapsible defaultOpen className="group/collapsible">
-                                    <SidebarMenuItem>
-                                        <SidebarMenuButton asChild className="cursor-pointer">
-                                            <CollapsibleTrigger>
-                                                <SquareChartGantt />
-                                                <span>Projects</span>
-                                                <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                                            </CollapsibleTrigger>
-                                        </SidebarMenuButton>
-
-                                        <SidebarMenuAction className="cursor-pointer" asChild>
-                                            <Link href="/org/addproject"><Plus /></Link>
-                                        </SidebarMenuAction>
-
-                                        <CollapsibleContent>
-                                            <SidebarMenuSub>
-                                                {state.projects.map(project => (
-                                                    <SidebarMenuSubItem key={project.title}>
-                                                        <SidebarMenuSubButton asChild>
-                                                            <a href="#">
-                                                                <SquareChartGantt />
-                                                                <span>{project.title}</span>
-                                                            </a>
-                                                        </SidebarMenuSubButton>
-                                                    </SidebarMenuSubItem>
-                                                ))}
-                                            </SidebarMenuSub>
-                                        </CollapsibleContent>
-                                    </SidebarMenuItem>
-                                </Collapsible>
-
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
 
+                    <SidebarGroup>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild>
+                                        <span className="font-bold">Projects</span>
+                                    </SidebarMenuButton>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <SidebarMenuAction className="cursor-pointer" asChild>
+                                                <Link href="/org/addproject"><Plus /></Link>
+                                            </SidebarMenuAction>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            Add Project
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </SidebarMenuItem>
+
+                                {state.projects.map(project => (
+                                    <SidebarMenuItem key={project.id}>
+                                        <Collapsible className="group/collapsible" >
+                                            <SidebarMenuButton asChild>
+                                                <CollapsibleTrigger>
+                                                    <SquareChartGantt />
+                                                    <span>{project.title}</span>
+                                                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                                                </CollapsibleTrigger>
+                                            </SidebarMenuButton>
+
+                                            <CollapsibleContent>
+                                                <SidebarMenuSub>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild>
+                                                            <Link href="">Tasks</Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild>
+                                                            <Link href="">Budget</Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild>
+                                                            <Link href="">Members</Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild>
+                                                            <Link href="">Performance</Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+
+                                                </SidebarMenuSub>
+                                            </CollapsibleContent>
+                                        </Collapsible>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
                 </SidebarContent>
+
                 <SidebarFooter>
                     <SidebarMenu>
                         <SidebarMenuItem>
