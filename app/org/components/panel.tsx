@@ -2,8 +2,9 @@
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
-import { Calendar, ChevronDown, File, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
+import { Calendar, ChevronRight, File, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@radix-ui/react-collapsible";
+import Link from "next/link";
 
 type Project = {
     title: string,
@@ -39,9 +40,13 @@ export default function Panel() {
 
     return (
         <SidebarProvider>
-            <Sidebar>
+            <Sidebar collapsible="icon">
                 <SidebarHeader>
-                    <p className="font-medium ml-2.5">Atomeleon</p>
+                    <SidebarMenuButton asChild>
+                        <a href="#">
+                            <span className="text-base font-semibold">Atomeleon</span>
+                        </a>
+                    </SidebarMenuButton>
                 </SidebarHeader>
                 <SidebarContent>
                     <SidebarGroup>
@@ -85,16 +90,18 @@ export default function Panel() {
 
                                 <Collapsible defaultOpen className="group/collapsible">
                                     <SidebarMenuItem>
-                                        <SidebarMenuButton asChild>
+                                        <SidebarMenuButton asChild className="cursor-pointer">
                                             <CollapsibleTrigger>
                                                 <SquareChartGantt />
                                                 <span>Projects</span>
-                                                <ChevronDown className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                                                <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
                                             </CollapsibleTrigger>
                                         </SidebarMenuButton>
-                                        <SidebarMenuAction>
-                                            <Plus className="cursor-pointer" />
+
+                                        <SidebarMenuAction className="cursor-pointer" asChild>
+                                            <Link href="/org/addproject"><Plus /></Link>
                                         </SidebarMenuAction>
+
                                         <CollapsibleContent>
                                             <SidebarMenuSub>
                                                 {state.projects.map(project => (
@@ -131,7 +138,7 @@ export default function Panel() {
                     </SidebarMenu>
                 </SidebarFooter>
             </Sidebar>
-            <SidebarTrigger />
+            <SidebarTrigger className="cursor-pointer" />
         </SidebarProvider>
     )
 }
