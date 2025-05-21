@@ -36,6 +36,10 @@ export default function TaskRow({ task }: { task: Task }) {
                         </TooltipContent>
                     </Tooltip>
                 </TableCell>
+                <TableCell>
+                    <span className="text-red-600 font-medium">35</span> / <span>45</span>
+                </TableCell>
+                <TableCell className="">$5500.00</TableCell>
                 <TableCell>{task.status === TaskStatus.Open ? "Open" : "Closed"}</TableCell>
                 <TableCell>{task.assignees?.join(", ")}</TableCell>
                 <TableCell>{task.createdDate}</TableCell>

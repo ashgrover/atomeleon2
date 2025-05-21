@@ -18,6 +18,11 @@ export default async function ProjectTasksPage({ params }: { params: Promise<{ p
                             <TableHead></TableHead>
                             <TableHead className="w-3xs font-bold text-gray-600">Task#</TableHead>
                             <TableHead className="w-3xs font-bold text-gray-600">Title</TableHead>
+                            <TableHead className="w-3xs font-bold text-gray-600">
+                                <p>Hours</p>
+                                <p>(Act / Est)</p>
+                            </TableHead>
+                            <TableHead className="w-3xs font-bold text-gray-600">Cost</TableHead>
                             <TableHead className="w-3xs font-bold text-gray-600">Status</TableHead>
                             <TableHead className="w-3xs font-bold text-gray-600">Assignees</TableHead>
                             <TableHead className="w-3xs font-bold text-gray-600">Created Date</TableHead>
