@@ -18,6 +18,7 @@ export const enum TaskStatus {
 export type Task = {
     id: string,
     parentId?: string,
+    publicId?: string,
     title: string,
     type?: string,
     estimatedHours?: string,
@@ -27,5 +28,15 @@ export type Task = {
     assignees?: string[],
     createdDate: string,
     updatedDate?: string,
-    dueDate?: string
+    dueDate?: string,
+    url?: string
+}
+
+export type CodeCommit = {
+    id: string,
+    commitId: string,
+    author: string,
+    message: string,
+    timestamp: string,
+    url: string
 }

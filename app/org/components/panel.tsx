@@ -1,6 +1,6 @@
 "use client";
 
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarRail, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
 import { Calendar, ChevronRight, File, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
 import Link from "next/link";
@@ -59,7 +59,7 @@ export default function Panel() {
                     </SidebarMenu>
                 </SidebarHeader>
 
-                <SidebarContent className="">
+                <SidebarContent>
                     <SidebarGroup>
                         <SidebarGroupContent>
                             <SidebarMenu>
@@ -134,6 +134,7 @@ export default function Panel() {
 
                                             <CollapsibleContent>
                                                 <SidebarMenuSub>
+
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild>
                                                             <Link href={`/org/projects/${project.id}/tasks`}>Tasks</Link>
@@ -175,11 +176,13 @@ export default function Panel() {
                                 </a>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
-
+                        <SidebarMenuItem>
+                            <SidebarTrigger className="ml-0.5 cursor-pointer" />
+                        </SidebarMenuItem>
                     </SidebarMenu>
+
                 </SidebarFooter>
             </Sidebar>
-            <SidebarTrigger className="cursor-pointer" />
         </SidebarProvider>
     )
 }
