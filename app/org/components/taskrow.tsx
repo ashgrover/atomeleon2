@@ -15,6 +15,8 @@ export default function TaskRow({ task }: { task: Task }) {
         setState(state => ({ ...state, isExpanded: !state.isExpanded }));
     }
 
+    const isActMoreThanEst = task.estimatedHours && task.actualHours > task.estimatedHours;
+
     return (
         <>
             <TableRow className={`cursor-pointer ${state.isExpanded ? "border-0" : ""}`} onClick={onExpand}>
@@ -37,7 +39,7 @@ export default function TaskRow({ task }: { task: Task }) {
                     </Tooltip>
                 </TableCell>
                 <TableCell>
-                    <span className="text-red-600 font-medium">35</span> / <span>45</span>
+                    <span className={`${isActMoreThanEst ? "text-red-600" : ""} font-medium`}>{task.actualHours} / {task.estimatedHours}</span>
                 </TableCell>
                 <TableCell className="">$5500.00</TableCell>
                 <TableCell>{task.status === TaskStatus.Open ? "Open" : "Closed"}</TableCell>

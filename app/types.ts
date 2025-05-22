@@ -21,8 +21,8 @@ export type Task = {
     publicId?: string,
     title: string,
     type?: string,
-    estimatedHours?: string,
-    actualHours: string,
+    estimatedHours?: number,
+    actualHours: number,
     status: TaskStatus
     labels?: string[],
     assignees?: string[],
