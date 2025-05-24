@@ -19,7 +19,7 @@ export default function TaskRow({ task }: { task: Task }) {
 
     return (
         <>
-            <TableRow className={`cursor-pointer ${state.isExpanded ? "border-0" : ""}`} onClick={onExpand}>
+            <TableRow className="cursor-pointer" onClick={onExpand}>
                 <TableCell className="font-semibold text-gray-600">
                     <ChevronRight size={16} className={`transition-transform ${state.isExpanded ? "rotate-90" : "rotate-0"}`} />
                 </TableCell>

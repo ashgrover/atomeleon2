@@ -36,8 +36,28 @@ export type Task = {
 export type CodeCommit = {
     id: string,
     commitId: string,
+    taskId?: string,
     author: string,
     message: string,
     timestamp: string,
     url: string
+}
+
+export type Contractor = {
+    id: string,
+    name: string,
+    totalHoursLogged: number,
+    totalTasksAssigned: number,
+    totalTasksCompleted: number,
+    hourlyRate: number,
+    startDate: string
+}
+
+export type Member = {
+    id: string,
+    contractorId: string,
+    projectId: string,
+    hoursLogged: number,
+    tasksAssigned: number,
+    tasksCompleted: number,
 }

@@ -13,7 +13,7 @@ export default async function BudgetPage({ params }: { params: Promise<{ project
             <h1 className="text-base font-bold text-gray-500">{projectName}-{projectId}</h1>
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Budget</h2>
-                <Button className="w-[100px]">Modify</Button>
+                <Button className="w-[100px] font-bold">Modify</Button>
             </div>
 
             <div className="flex flex-wrap gap-x-16 mt-5 rounded-lg border-1 justify-center">
