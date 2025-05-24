@@ -39,11 +39,10 @@ export default function MemberRow({ projectId, member }: { projectId: string, me
             {!state.isExpanded ? null :
                 <>
                     <TableRow className="hover:bg-transparent">
-                        <TableCell colSpan={8} className="pt-2 pb-5">
+                        <TableCell colSpan={8}>
                             <p className="mb-3 ml-8 font-bold text-xs">Assigned Tasks</p>
                             <Tasks className="ml-8 max-h-80 overflow-auto bg-neutral-50" projectId={projectId} contractorId={member.contractorId} />
                             <div className="my-5" />
-
                             <p className="mb-3 ml-8 font-bold text-xs">Commit Activity <Badge>{mockCodeCommits.length}</Badge></p>
                             <Commits commits={mockCodeCommits} className="max-h-80 overflow-auto" />
                         </TableCell>
