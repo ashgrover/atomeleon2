@@ -1,4 +1,4 @@
-import DataChart from "@/app/org/components/datachart";
+import DataChart from "@/app/org/components/DataChart";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";

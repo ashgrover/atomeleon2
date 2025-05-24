@@ -2,10 +2,13 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { Member } from "@/app/types";
+import { Member, TaskStatus } from "@/app/types";
 import { mockCodeCommits, mockContractors, mockTasksData } from "../mockdata";
+import Commits from "./Commits";
+import Tasks from "./Tasks";
+import TaskStatusBadge from "./TaskStatusBadge";
 
-export default function MemberRow({ member }: { member: Member }) {
+export default function MemberRow({ projectId, member }: { projectId: string, member: Member }) {
     const [state, setState] = useState({ isExpanded: false })
 
     const onExpand = () => {
@@ -35,10 +38,11 @@ export default function MemberRow({ member }: { member: Member }) {
             {!state.isExpanded ? null :
                 <>
                     <TableRow className="hover:bg-transparent">
-                        <TableCell colSpan={9} className="pt-2 pb-5">
-                            <UserAssignedTasks member={member} />
+                        <TableCell colSpan={7} className="pt-2 pb-5">
+                            <Tasks className="ml-8" projectId={projectId} contractorId={member.contractorId} />
+                            {/* <UserAssignedTasks member={member} /> */}
                             <div className="my-5" />
-                            <UserCommits member={member} />
+                            <Commits commits={mockCodeCommits} />
                         </TableCell>
                     </TableRow>
                 </>
@@ -47,50 +51,38 @@ export default function MemberRow({ member }: { member: Member }) {
     )
 }
 
-function UserAssignedTasks({ member }: { member: Member }) {
-    return (
-        <div className="ml-8 p-3 border-1 rounded-sm bg-blue-50">
-            <p className="mb-3 font-bold text-xs">Tasks</p>
-            <div className=" grid grid-cols-4 gap-y-3 items-center text-sm">
-                <div className="col-span-4 border-b-1" />
+// function UserAssignedTasks({ member }: { member: Member }) {
+//     return (
+//         <div className="ml-8 p-3 border-1 rounded-sm bg-neutral-50">
+//             <p className="mb-3 font-bold text-xs">Tasks</p>
+//             <div className=" grid grid-cols-4 gap-y-3 items-center text-sm">
+//                 <p className="font-bold text-slate-500">Task#</p>
+//                 <p className="font-bold text-slate-500">Title</p>
+//                 <p className="font-bold text-slate-500">Status</p>
+//                 <p className="font-bold text-slate-500">Cost</p>
+//                 <p className="font-bold text-slate-500">Created Date</p>
+//                 <div className="col-span-5 border-b-1" />
 
-                <a href="" target="_blank" className="text-blue-600 underline">TK-1</a>
-                <p>Task 1</p>
-                <p>$5,000</p>
-                <p>50%</p>
-                <div className="col-span-4 border-b-1" />
+//                 <a href="" target="_blank" className="text-blue-600 underline">TK-1</a>
+//                 <p>Task 1</p>
+//                 <p><TaskStatusBadge status={TaskStatus.Open} /></p>
+//                 <p>$5,000</p>
+//                 <p>May 20, 2025</p>
+//                 <div className="col-span-5 border-b-1" />
 
-                <a href="" target="_blank" className="text-blue-600 underline">TK-1</a>
-                <p>Task 1 Task 1</p>
-                <p>$5,000</p>
-                <p>50%</p>
-                <div className="col-span-4 border-b-1" />
+//                 <a href="" target="_blank" className="text-blue-600 underline">TK-1</a>
+//                 <p>Task 1 Task 1</p>
+//                 <p><TaskStatusBadge status={TaskStatus.Open} /></p>
+//                 <p>$5,000</p>
+//                 <p>May 20, 2025</p>
+//                 <div className="col-span-5 border-b-1" />
 
-                <a href="" target="_blank" className="text-blue-600 underline">TK-1</a>
-                <p>Task 1</p>
-                <p>$5,000</p>
-                <p>50%</p>
-
-            </div>
-        </div>
-    )
-}
-
-function UserCommits({ member }: { member: Member }) {
-    return (
-        <div className="ml-8 p-3 border-1 rounded-sm bg-blue-50">
-            <p className="mb-3 font-bold text-xs">Commits</p>
-            <ul className="flex flex-col gap-3 list-disc">
-                {mockCodeCommits.map(commit => (
-                    <li key={commit.id} className="flex gap-x-2">
-                        <p>{commit.timestamp}</p> |
-                        <p>{commit.author}</p> |
-                        <a href={commit.url} className="text-blue-600 underline" target="_blank">{commit.commitId}</a> |
-                        <p>{commit.message}</p>
-                    </li>
-                ))}
-            </ul>
-
-        </div>
-    )
-}
+//                 <a href="" target="_blank" className="text-blue-600 underline">TK-1</a>
+//                 <p>Task 1</p>
+//                 <p><TaskStatusBadge status={TaskStatus.Open} /></p>
+//                 <p>$5,000</p>
+//                 <p>May 20, 2025</p>
+//             </div>
+//         </div>
+//     )
+// }
