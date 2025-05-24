@@ -124,7 +124,7 @@ export default function Panel() {
                                 {state.projects.map(project => (
                                     <SidebarMenuItem key={project.id}>
                                         <Collapsible className="group/collapsible" >
-                                            <SidebarMenuButton asChild>
+                                            <SidebarMenuButton asChild className="cursor-pointer">
                                                 <CollapsibleTrigger>
                                                     <SquareChartGantt />
                                                     <span>{project.title}</span>
@@ -134,15 +134,9 @@ export default function Panel() {
 
                                             <CollapsibleContent>
                                                 <SidebarMenuSub>
-
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/tasks`}>Tasks</Link>
-                                                        </SidebarMenuSubButton>
-                                                    </SidebarMenuSubItem>
-                                                    <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild>
-                                                            <Link href="">Budget</Link>
+                                                            <Link href={`/org/projects/${project.id}/budget`}>Budget</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
@@ -152,10 +146,14 @@ export default function Panel() {
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild>
+                                                            <Link href={`/org/projects/${project.id}/tasks`}>Tasks</Link>
+                                                        </SidebarMenuSubButton>
+                                                    </SidebarMenuSubItem>
+                                                    <SidebarMenuSubItem>
+                                                        <SidebarMenuSubButton asChild>
                                                             <Link href="">Performance</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
-
                                                 </SidebarMenuSub>
                                             </CollapsibleContent>
                                         </Collapsible>

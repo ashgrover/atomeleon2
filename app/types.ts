@@ -7,7 +7,8 @@ export type Project = {
     budget?: number,
     repoUrl: string,
     labels?: string[],
-    createdDate: string
+    startDate: string,
+    createdDate: string,
 }
 
 export const enum TaskStatus {

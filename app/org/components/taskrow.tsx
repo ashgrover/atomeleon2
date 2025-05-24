@@ -23,11 +23,15 @@ export default function TaskRow({ task }: { task: Task }) {
                 <TableCell className="font-semibold text-gray-600">
                     <ChevronRight size={16} className={`transition-transform ${state.isExpanded ? "rotate-90" : "rotate-0"}`} />
                 </TableCell>
-                <TableCell className="font-semibold text-gray-600">{task.publicId}</TableCell>
-                <TableCell className="text-blue-600 font-medium underline min-w-50">
+                <TableCell className="font-semibold text-blue-600 underline">
+                    <a href={task.url} target="_blank">
+                        {task.publicId}
+                    </a>
+                </TableCell>
+                <TableCell className="text-blue-600 font-medium min-w-80">
                     <Tooltip delayDuration={500}>
                         <TooltipTrigger>
-                            <div className="text-wrap text-left">
+                            <div className="text-wrap underline text-left">
                                 <a href={task.url} target="_blank">
                                     {taskTitle}
                                 </a>
@@ -42,7 +46,9 @@ export default function TaskRow({ task }: { task: Task }) {
                     <span className={`${isActMoreThanEst ? "text-red-600" : ""} font-medium`}>{task.actualHours} / {task.estimatedHours}</span>
                 </TableCell>
                 <TableCell className="">$5500.00</TableCell>
-                <TableCell>{task.status === TaskStatus.Open ? "Open" : "Closed"}</TableCell>
+                <TableCell>
+                    <span className="bg-green-200 p-1.5 rounded-sm text-xs font-medium">{task.status === TaskStatus.Open ? "Open" : "Closed"}</span>
+                </TableCell>
                 <TableCell>{task.assignees?.join(", ")}</TableCell>
                 <TableCell>{task.createdDate}</TableCell>
                 <TableCell>{task.updatedDate}</TableCell>
@@ -50,7 +56,7 @@ export default function TaskRow({ task }: { task: Task }) {
 
             {!state.isExpanded ? null :
                 <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={6}>
+                    <TableCell colSpan={9} className="pt-2 pb-5">
                         <TaskCommits task={task} />
                     </TableCell>
                 </TableRow>
