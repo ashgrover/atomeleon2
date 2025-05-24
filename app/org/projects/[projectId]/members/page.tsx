@@ -27,6 +27,7 @@ export default async function MembersPage({ params }: { params: Promise<{ projec
                             <TableHead className="w-3xs font-bold text-slate-600">Hours Logged</TableHead>
                             <TableHead className="w-3xs font-bold text-slate-600">Hourly Rate</TableHead>
                             <TableHead className="w-3xs font-bold text-slate-600">Cost</TableHead>
+                            <TableHead className="w-3xs font-bold text-slate-600">Commits This Week</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
