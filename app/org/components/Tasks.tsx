@@ -87,6 +87,7 @@ function TaskRow({ task }: { task: Task }) {
             {!state.isExpanded ? null :
                 <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={8} className="pt-2 pb-5">
+                        <p className="mb-3 ml-8 font-bold text-xs">Commit Activity</p>
                         <Commits commits={mockCodeCommits} />
                     </TableCell>
                 </TableRow>

@@ -2,11 +2,10 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { Member, TaskStatus } from "@/app/types";
-import { mockCodeCommits, mockContractors, mockTasksData } from "../mockdata";
+import { Member } from "@/app/types";
+import { mockCodeCommits, mockContractors } from "../mockdata";
 import Commits from "./Commits";
 import Tasks from "./Tasks";
-import TaskStatusBadge from "./TaskStatusBadge";
 
 export default function MemberRow({ projectId, member }: { projectId: string, member: Member }) {
     const [state, setState] = useState({ isExpanded: false })
@@ -39,9 +38,12 @@ export default function MemberRow({ projectId, member }: { projectId: string, me
                 <>
                     <TableRow className="hover:bg-transparent">
                         <TableCell colSpan={7} className="pt-2 pb-5">
-                            <Tasks className="ml-8" projectId={projectId} contractorId={member.contractorId} />
+                            <p className="mb-3 ml-8 font-bold text-xs">Assigned Tasks</p>
+                            <Tasks className="ml-8 max-h-80 overflow-auto bg-neutral-50" projectId={projectId} contractorId={member.contractorId} />
                             <div className="my-5" />
-                            <Commits commits={mockCodeCommits} />
+
+                            <p className="mb-3 ml-8 font-bold text-xs">Commit Activity</p>
+                            <Commits commits={mockCodeCommits} className="max-h-80 overflow-auto" />
                         </TableCell>
                     </TableRow>
                 </>
