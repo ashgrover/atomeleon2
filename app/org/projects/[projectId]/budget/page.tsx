@@ -16,7 +16,7 @@ export default async function BudgetPage({ params }: { params: Promise<{ project
                 <Button className="w-[100px] font-bold">Modify</Button>
             </div>
 
-            <div className="flex flex-wrap gap-x-16 mt-5 rounded-lg border-1 justify-center">
+            <div className="flex flex-wrap gap-x-16 mt-5 rounded-lg border-1 justify-center shadow-lg shadow-slate-200">
                 <div className="m-5 mt-10">
                     <h3 className="mt-8 pb-2 font-bold border-b-1">Summary</h3>
                     <div className="justify-items-center">
@@ -42,7 +42,7 @@ export default async function BudgetPage({ params }: { params: Promise<{ project
             </div>
 
             <div className="mt-8 flex flex-wrap md:flex-nowrap gap-y-5 gap-x-12 font-semibold">
-                <div className="p-5 rounded-lg border-1 w-full">
+                <div className="p-5 rounded-lg border-1 w-full shadow-lg shadow-slate-200">
                     <p className="font-bold mb-5">Contractor Spend</p>
                     <div className="grid grid-cols-3 gap-y-5 gap-x-5 items-center min-w-md text-sm">
                         <p className="font-bold text-slate-500">Contractor</p>
@@ -66,7 +66,7 @@ export default async function BudgetPage({ params }: { params: Promise<{ project
                     </div>
                 </div>
 
-                <div className="p-5 rounded-lg border-1 w-full">
+                <div className="p-5 rounded-lg border-1 w-full shadow-lg shadow-slate-200">
                     <p className="font-bold mb-5">Task Spend</p>
                     <div className=" grid grid-cols-4 gap-y-5 gap-x-5 min-w-md items-center text-sm">
                         <p className="font-bold text-slate-500">Task#</p>

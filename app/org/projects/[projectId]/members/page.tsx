@@ -16,7 +16,7 @@ export default async function MembersPage({ params }: { params: Promise<{ projec
                 <Button className="w-[130px] font-bold"><Plus strokeWidth={3} /> Add Member</Button>
             </div>
 
-            <div className="mt-8 border-1 rounded-sm">
+            <div className="mt-8 border-1 rounded-sm shadow-md shadow-slate-200">
                 <Table>
                     <TableHeader className="bg-slate-50 text-xs">
                         <TableRow>

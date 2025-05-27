@@ -2,8 +2,8 @@ import { CodeCommit } from "@/app/types";
 
 export default function Commits({ commits, className }: { commits: CodeCommit[], className?: string }) {
     return (
-        <div className={`ml-8 ${className}`}>
-            <ul className="flex flex-col gap-3 list-disc p-3 border-1 rounded-sm bg-neutral-50">
+        <div className={`ml-8 shadow-md shadow-slate-200 border-1 rounded-sm bg-neutral-50 ${className}`}>
+            <ul className="flex flex-col gap-3 list-disc p-3 ">
                 {commits.map(commit => (
                     <li key={commit.id} className="flex gap-x-2">
                         <p className="font-medium">{commit.timestamp}</p> |

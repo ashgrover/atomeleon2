@@ -12,7 +12,7 @@ import TaskStatusBadge from "./TaskStatusBadge";
 
 export default function Tasks({ projectId, contractorId, className }: { projectId: string, contractorId?: string, className?: string }) {
     return (
-        <div className={`border-1 rounded-sm ${className}`}>
+        <div className={`border-1 rounded-sm shadow-md shadow-slate-200 ${className}`}>
             <Table>
                 <TableHeader className="bg-slate-50 text-xs border-b-1">
                     <TableRow>
