@@ -6,6 +6,7 @@ import { Calendar, ChevronRight, File, Home, Inbox, Plus, Settings, SquareChartG
 import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
 
 type Project = {
     id: string,
@@ -90,14 +91,14 @@ export default function Panel() {
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
 
-                                <SidebarMenuItem>
+                                {/* <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
                                         <a href="#">
                                             <File />
                                             <span className="font-medium">Documents</span>
                                         </a>
                                     </SidebarMenuButton>
-                                </SidebarMenuItem>
+                                </SidebarMenuItem> */}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
@@ -105,9 +106,12 @@ export default function Panel() {
                     <SidebarGroup>
                         <SidebarGroupContent>
                             <SidebarMenu>
+                                {/* <Button size="sm" variant="default" className="font-bold min-w-50 mx-auto">
+                                    <Link href="/org/addproject">Add Project</Link>
+                                </Button> */}
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
-                                        <span className="font-bold">Projects</span>
+                                        <span className="font-bold text-slate-600">Projects</span>
                                     </SidebarMenuButton>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -127,7 +131,7 @@ export default function Panel() {
                                             <SidebarMenuButton asChild className="cursor-pointer">
                                                 <CollapsibleTrigger>
                                                     <SquareChartGantt />
-                                                    <span>{project.title}</span>
+                                                    <span className="font-bold">{project.title}</span>
                                                     <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
                                                 </CollapsibleTrigger>
                                             </SidebarMenuButton>
@@ -136,22 +140,22 @@ export default function Panel() {
                                                 <SidebarMenuSub>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/budget`}>Budget</Link>
+                                                            <Link href={`/org/projects/${project.id}/budget`} className="font-medium">Budget</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/members`}>Members</Link>
+                                                            <Link href={`/org/projects/${project.id}/members`} className="font-medium">Members</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/tasks`}>Tasks</Link>
+                                                            <Link href={`/org/projects/${project.id}/tasks`} className="font-medium">Tasks</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/performance`}>Performance</Link>
+                                                            <Link href={`/org/projects/${project.id}/performance`} className="font-medium">Performance</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                 </SidebarMenuSub>
