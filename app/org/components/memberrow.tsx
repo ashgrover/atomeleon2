@@ -2,20 +2,20 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { Member } from "@/app/types";
-import { mockCodeCommits, mockContractors } from "../mockdata";
+import { ProjectMember } from "@/app/types";
+import { mockCodeCommits, mockOrgMembers } from "../mockdata";
 import Commits from "./Commits";
 import Tasks from "./Tasks";
 import { Badge } from "@/components/ui/badge";
 
-export default function MemberRow({ projectId, member }: { projectId: string, member: Member }) {
+export default function MemberRow({ projectId, member }: { projectId: string, member: ProjectMember }) {
     const [state, setState] = useState({ isExpanded: false })
 
     const onExpand = () => {
         setState(state => ({ ...state, isExpanded: !state.isExpanded }));
     }
 
-    const contractor = mockContractors.filter(c => c.id === member.contractorId)[0];
+    const projectMember = mockOrgMembers.filter(c => c.id === member.orgMemberId)[0];
 
     return (
         <>
@@ -25,14 +25,14 @@ export default function MemberRow({ projectId, member }: { projectId: string, me
                 </TableCell>
                 <TableCell className="font-semibold text-blue-600 underline">
                     <a href="" target="_blank">
-                        {contractor.name}
+                        {projectMember.name}
                     </a>
                 </TableCell>
                 <TableCell className="font-medium">{member.tasksAssigned}</TableCell>
                 <TableCell className="font-medium">{member.tasksCompleted}</TableCell>
                 <TableCell className="font-medium">{member.hoursLogged}h</TableCell>
-                <TableCell className="font-medium">${contractor.hourlyRate}/hr</TableCell>
-                <TableCell className="font-medium">${member.hoursLogged * contractor.hourlyRate}</TableCell>
+                <TableCell className="font-medium">${projectMember.hourlyRate}/hr</TableCell>
+                <TableCell className="font-medium">${member.hoursLogged * projectMember.hourlyRate}</TableCell>
                 <TableCell className="font-medium">5</TableCell>
             </TableRow>
 
@@ -41,7 +41,7 @@ export default function MemberRow({ projectId, member }: { projectId: string, me
                     <TableRow className="hover:bg-transparent">
                         <TableCell colSpan={8}>
                             <p className="mb-3 ml-8 font-bold text-xs">Assigned Tasks</p>
-                            <Tasks className="ml-8 max-h-80 overflow-auto bg-neutral-50" projectId={projectId} contractorId={member.contractorId} />
+                            <Tasks className="ml-8 max-h-80 overflow-auto bg-neutral-50" projectId={projectId} orgMemberId={member.orgMemberId} />
                             <div className="my-5" />
                             <p className="mb-3 ml-8 font-bold text-xs">Commit Activity <Badge>{mockCodeCommits.length}</Badge></p>
                             <Commits commits={mockCodeCommits} className="max-h-80 overflow-auto " />

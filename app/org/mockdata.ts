@@ -1,4 +1,4 @@
-import { CodeCommit, Contractor, Member, Task, TaskStatus } from "../types";
+import { CodeCommit, ProjectMember, OrgMember, Task, TaskStatus, OrgMemberType } from "../types";
 
 
 export const mockTasksData: Task[] = [
@@ -59,7 +59,7 @@ export const mockTasksData: Task[] = [
 export const mockCodeCommits: CodeCommit[] = [
     {
         id: "1",
-        commitId: "8818b71",
+        publicId: "8818b71",
         taskId: "t1",
         author: "author",
         timestamp: "May 20, 2025",
@@ -68,7 +68,7 @@ export const mockCodeCommits: CodeCommit[] = [
     },
     {
         id: "2",
-        commitId: "8818b714",
+        publicId: "8818b714",
         taskId: "t2",
         author: "author",
         timestamp: "May 21, 2025",
@@ -77,7 +77,7 @@ export const mockCodeCommits: CodeCommit[] = [
     },
     {
         id: "3",
-        commitId: "8818b715",
+        publicId: "8818b715",
         taskId: "t3",
         author: "author",
         timestamp: "May 25, 2025",
@@ -86,7 +86,7 @@ export const mockCodeCommits: CodeCommit[] = [
     },
     {
         id: "4",
-        commitId: "8818b716",
+        publicId: "8818b716",
         taskId: "t4",
         author: "author",
         timestamp: "May 28, 2025",
@@ -95,10 +95,12 @@ export const mockCodeCommits: CodeCommit[] = [
     }
 ];
 
-export const mockContractors: Contractor[] = [
+export const mockOrgMembers: OrgMember[] = [
     {
         id: "c1",
+        orgId: "o1",
         name: "John Doe",
+        orgMemberType: OrgMemberType.Contractor,
         totalHoursLogged: 50,
         totalTasksAssigned: 40,
         totalTasksCompleted: 20,
@@ -107,7 +109,9 @@ export const mockContractors: Contractor[] = [
     },
     {
         id: "c2",
+        orgId: "o2",
         name: "Jane Doe",
+        orgMemberType: OrgMemberType.Contractor,
         totalHoursLogged: 80,
         totalTasksAssigned: 50,
         totalTasksCompleted: 30,
@@ -116,7 +120,9 @@ export const mockContractors: Contractor[] = [
     },
     {
         id: "c3",
+        orgId: "o3",
         name: "Alex Doe",
+        orgMemberType: OrgMemberType.Contractor,
         totalHoursLogged: 20,
         totalTasksAssigned: 10,
         totalTasksCompleted: 5,
@@ -125,7 +131,9 @@ export const mockContractors: Contractor[] = [
     },
     {
         id: "c4",
+        orgId: "o4",
         name: "Harry Doe",
+        orgMemberType: OrgMemberType.Contractor,
         totalHoursLogged: 50,
         totalTasksAssigned: 40,
         totalTasksCompleted: 20,
@@ -134,10 +142,10 @@ export const mockContractors: Contractor[] = [
     },
 ]
 
-export const mockMembers: Member[] = [
+export const mockMembers: ProjectMember[] = [
     {
         id: "1",
-        contractorId: "c1",
+        orgMemberId: "c1",
         projectId: "p1",
         hoursLogged: 40,
         tasksAssigned: 15,
@@ -145,7 +153,7 @@ export const mockMembers: Member[] = [
     },
     {
         id: "2",
-        contractorId: "c2",
+        orgMemberId: "c2",
         projectId: "p1",
         hoursLogged: 20,
         tasksAssigned: 10,
@@ -153,7 +161,7 @@ export const mockMembers: Member[] = [
     },
     {
         id: "3",
-        contractorId: "c3",
+        orgMemberId: "c3",
         projectId: "p1",
         hoursLogged: 30,
         tasksAssigned: 20,
@@ -161,11 +169,17 @@ export const mockMembers: Member[] = [
     },
     {
         id: "4",
-        contractorId: "c4",
+        orgMemberId: "c4",
         projectId: "p1",
         hoursLogged: 10,
         tasksAssigned: 5,
         tasksCompleted: 2
     },
 
+];
+
+export const MockTimesheets = [
+    {
+        orgMemberId: ""
+    }
 ];

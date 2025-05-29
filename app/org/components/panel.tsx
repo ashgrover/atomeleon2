@@ -66,28 +66,28 @@ export default function Panel() {
                             <SidebarMenu>
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
-                                        <a href="#">
+                                        <Link href="#">
                                             <Home />
                                             <span className="font-medium">Home</span>
-                                        </a>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
 
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
-                                        <a href="#">
+                                        <Link href="/org/timesheets">
                                             <Calendar />
                                             <span className="font-medium">Timesheets</span>
-                                        </a>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
 
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
-                                        <a href="#">
+                                        <Link href="#">
                                             <Inbox />
                                             <span className="font-medium">Contractors</span>
-                                        </a>
+                                        </Link>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
 
@@ -131,7 +131,7 @@ export default function Panel() {
                                             <SidebarMenuButton asChild className="cursor-pointer">
                                                 <CollapsibleTrigger>
                                                     <SquareChartGantt />
-                                                    <span className="font-bold">{project.title}</span>
+                                                    <span className="font-semibold">{project.title}</span>
                                                     <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
                                                 </CollapsibleTrigger>
                                             </SidebarMenuButton>

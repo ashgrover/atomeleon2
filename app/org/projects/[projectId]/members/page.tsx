@@ -38,5 +38,5 @@ export default async function MembersPage({ params }: { params: Promise<{ projec
                 </Table>
             </div>
         </div>
-    )
+    );
 }

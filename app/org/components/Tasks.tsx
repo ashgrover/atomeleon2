@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent } from "@/components/ui/tooltip";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import TaskStatusBadge from "./TaskStatusBadge";
 
-export default function Tasks({ projectId, contractorId, className }: { projectId: string, contractorId?: string, className?: string }) {
+export default function Tasks({ projectId, orgMemberId, className }: { projectId: string, orgMemberId?: string, className?: string }) {
     return (
         <div className={`border-1 rounded-sm shadow-md shadow-slate-200 ${className}`}>
             <Table>

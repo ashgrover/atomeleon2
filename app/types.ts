@@ -2,6 +2,7 @@
 
 export type Project = {
     id: string,
+    orgId: string,
     title: string,
     description?: string,
     budget?: number,
@@ -18,8 +19,8 @@ export const enum TaskStatus {
 
 export type Task = {
     id: string,
-    parentId?: string,
     publicId?: string,
+    projectId?: string,
     title: string,
     type?: string,
     estimatedHours?: number,
@@ -35,7 +36,7 @@ export type Task = {
 
 export type CodeCommit = {
     id: string,
-    commitId: string,
+    publicId: string,
     taskId?: string,
     author: string,
     message: string,
@@ -43,9 +44,17 @@ export type CodeCommit = {
     url: string
 }
 
-export type Contractor = {
+export const enum OrgMemberType {
+    Admin,
+    ProjectManager,
+    Contractor
+}
+
+export type OrgMember = {
     id: string,
+    orgId: string,
     name: string,
+    orgMemberType: OrgMemberType,
     totalHoursLogged: number,
     totalTasksAssigned: number,
     totalTasksCompleted: number,
@@ -53,11 +62,29 @@ export type Contractor = {
     startDate: string
 }
 
-export type Member = {
+export type ProjectMember = {
     id: string,
-    contractorId: string,
+    orgMemberId: string,
     projectId: string,
     hoursLogged: number,
     tasksAssigned: number,
     tasksCompleted: number,
+}
+
+export const enum TimesheetStatus {
+    Draft,
+    Approved,
+    AwaitingReview,
+    ChangesRequested,
+    Withdrawn,
+    Cancelled
+}
+
+export type Timesheet = {
+    id: string,
+    orgId: string,
+    orgMemberId: string,
+    periodStart: number,
+    periodEnd: number,
+    status: TimesheetStatus
 }
