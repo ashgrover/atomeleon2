@@ -1,4 +1,4 @@
-import { CodeCommit, ProjectMember, OrgMember, Task, TaskStatus, OrgMemberType } from "../types";
+import { CodeCommit, ProjectMember, OrgMember, Task, TaskStatus, OrgMemberType, Timesheet, TimesheetStatus } from "../types";
 
 
 export const mockTasksData: Task[] = [
@@ -178,8 +178,53 @@ export const mockMembers: ProjectMember[] = [
 
 ];
 
-export const MockTimesheets = [
+export const MockTimesheets: Timesheet[] = [
     {
-        orgMemberId: ""
-    }
+        id: "t1",
+        orgId: "o1",
+        orgMemberId: "c1",
+        periodStart: 1747764983000,
+        periodEnd: 1748542583000,
+        status: TimesheetStatus.AwaitingReview
+    },
+    {
+        id: "t2",
+        orgId: "o1",
+        orgMemberId: "c2",
+        periodStart: 1747764983000,
+        periodEnd: 1748542583000,
+        status: TimesheetStatus.AwaitingReview
+    },
+    {
+        id: "t3",
+        orgId: "o1",
+        orgMemberId: "c3",
+        periodStart: 1747764983000,
+        periodEnd: 1748542583000,
+        status: TimesheetStatus.ChangesRequested
+    },
+    {
+        id: "t4",
+        orgId: "o1",
+        orgMemberId: "c4",
+        periodStart: 1747764983000,
+        periodEnd: 1748542583000,
+        status: TimesheetStatus.Approved
+    },
+    {
+        id: "t5",
+        orgId: "o1",
+        orgMemberId: "c5",
+        periodStart: 1747764983000,
+        periodEnd: 1748542583000,
+        status: TimesheetStatus.Withdrawn
+    },
+    {
+        id: "t6",
+        orgId: "o1",
+        orgMemberId: "c6",
+        periodStart: 1747764983000,
+        periodEnd: 1748542583000,
+        status: TimesheetStatus.Cancelled
+    },
 ];
