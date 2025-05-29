@@ -4,7 +4,7 @@ import { Table, TableBody, TableHead, TableHeader, TableRow, TableCell } from "@
 import { Timesheet } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { MockTimesheets } from "../mockdata";
-import { Cross, CrossIcon, Ellipsis, X } from "lucide-react";
+import { Ellipsis, X } from "lucide-react";
 import TimesheetStatusBadge from "../components/TimesheetStatusBadge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import DatePicker from "../components/DatePicker";
@@ -80,6 +80,14 @@ function TimesheetRow({ timesheet }: { timesheet: Timesheet }) {
 
             </TableCell>
         </TableRow>
+    )
+}
+
+function TimeEntriesDialog({ timesheet }: { timesheet: Timesheet }) {
+    return (
+        <div>
+
+        </div>
     )
 }
 

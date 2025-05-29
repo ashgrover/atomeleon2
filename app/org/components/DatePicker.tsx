@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -16,7 +15,7 @@ export default function DatePicker({ }) {
     const onSelectDate = (date: Date | undefined) => {
         console.log(date)
         if (!date) return;
-        
+
         setState(state => ({ ...state, selectedDate: date }));
     }
 
