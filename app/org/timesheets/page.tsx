@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import DatePicker from "../components/DatePicker";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Timesheets({ }) {
 
@@ -53,8 +54,10 @@ export default function Timesheets({ }) {
 }
 
 function TimesheetRow({ timesheet }: { timesheet: Timesheet }) {
+    const router = useRouter();
+
     return (
-        <TableRow className="cursor-pointer">
+        <TableRow className="cursor-pointer" onClick={() => router.push(`/org/timesheets/entries/${timesheet.orgMemberId}`)}>
             <TableCell></TableCell>
             <TableCell>
                 <span className="bg-gray-200 p-2 rounded-2xl mr-2">JD</span>
@@ -77,17 +80,8 @@ function TimesheetRow({ timesheet }: { timesheet: Timesheet }) {
                         <DropdownMenuItem variant="destructive">Cancel Timesheet</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
-
             </TableCell>
         </TableRow>
-    )
-}
-
-function TimeEntriesDialog({ timesheet }: { timesheet: Timesheet }) {
-    return (
-        <div>
-
-        </div>
     )
 }
 
