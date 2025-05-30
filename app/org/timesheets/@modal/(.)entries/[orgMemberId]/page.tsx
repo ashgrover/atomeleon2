@@ -1,28 +1,16 @@
-"use client";
 
+import Modal from "@/app/org/components/Modal";
 import TimeEntries from "@/app/org/components/TimeEntries";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { MockTimesheets } from "@/app/org/mockdata";
 
-export default function EntriesInterceptedPage({ }) {
-    const router = useRouter();
+export default async function EntriesModalPage({ params }: { params: Promise<{ timesheetId: string }> }) {
 
-    const onCloseDialog = () => {
-        router.back();
-    }
+    const timesheet = MockTimesheets[0];
 
     return (
-        <Dialog defaultOpen={true} onOpenChange={onCloseDialog}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Title</DialogTitle>
-                    <DialogDescription>
-                        Description
-                    </DialogDescription>
-                </DialogHeader>
-                <TimeEntries />
-            </DialogContent>
-        </Dialog>
+        <Modal className="sm:max-w-5xl"
+            title={`Time Entries for ${timesheet.id}`}>
+            <TimeEntries timesheet={timesheet} />
+        </Modal>
     )
 }
