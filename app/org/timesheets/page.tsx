@@ -56,6 +56,14 @@ export default function Timesheets({ }) {
 function TimesheetRow({ timesheet }: { timesheet: Timesheet }) {
     const router = useRouter();
 
+    const onRequestChanges: React.MouseEventHandler<HTMLDivElement> = (e) => {
+        e.stopPropagation();
+    }
+
+    const onCancelTimesheet: React.MouseEventHandler<HTMLDivElement> = (e) => {
+        e.stopPropagation();
+    }
+
     return (
         <TableRow className="cursor-pointer" onClick={() => router.push(`/org/timesheets/entries/${timesheet.orgMemberId}`)}>
             <TableCell></TableCell>
@@ -75,9 +83,9 @@ function TimesheetRow({ timesheet }: { timesheet: Timesheet }) {
                         <Button size="sm" variant="outline"><Ellipsis /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="mr-2">
-                        <DropdownMenuItem>Request Changes</DropdownMenuItem>
+                        <DropdownMenuItem onClick={onRequestChanges}>Request Changes</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive">Cancel Timesheet</DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive" onClick={onCancelTimesheet}>Cancel Timesheet</DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </TableCell>
