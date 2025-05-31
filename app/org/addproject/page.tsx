@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Github, Gitlab } from "lucide-react";
 
 
 export default function AddProjectPage() {
@@ -27,12 +26,17 @@ export default function AddProjectPage() {
                 </div>
 
                 <div className="grid gap-3">
+                    <Label>Connect Task Tracking Tool</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <Button variant="secondary">Jira</Button>
+                        <Button variant="secondary">Azure Boards</Button>
+                    </div>
+                </div>
+                <div className="grid gap-3">
                     <Label>Connect Repository</Label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <Button variant="secondary">GitHub</Button>
-                        <Button variant="secondary">GitLab</Button>
                         <Button variant="secondary">Bitbucket</Button>
-                        <Button variant="secondary">Azure DevOps</Button>
+                        <Button variant="secondary">Azure Repos</Button>
                     </div>
                 </div>
             </div>
