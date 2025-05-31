@@ -8,8 +8,7 @@ export default async function EntriesModalPage({ params }: { params: Promise<{ t
     const timesheet = MockTimesheets[0];
 
     return (
-        <Modal className="sm:max-w-5xl"
-            title={`Time Entries for ${timesheet.id}`}>
+        <Modal className="sm:max-w-6xl" title="Time Entries">
             <TimeEntries timesheet={timesheet} />
         </Modal>
     )

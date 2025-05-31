@@ -139,23 +139,23 @@ export default function Panel() {
                                             <CollapsibleContent>
                                                 <SidebarMenuSub>
                                                     <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/budget`} className="font-medium">Budget</Link>
+                                                        <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
+                                                            <Link href={`/org/projects/${project.id}/budget`}>Budget</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/members`} className="font-medium">Members</Link>
+                                                        <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
+                                                            <Link href={`/org/projects/${project.id}/members`}>Members</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/tasks`} className="font-medium">Tasks</Link>
+                                                        <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
+                                                            <Link href={`/org/projects/${project.id}/tasks`}>Tasks</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild>
-                                                            <Link href={`/org/projects/${project.id}/performance`} className="font-medium">Performance</Link>
+                                                        <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
+                                                            <Link href={`/org/projects/${project.id}/performance`}>Performance</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                 </SidebarMenuSub>
