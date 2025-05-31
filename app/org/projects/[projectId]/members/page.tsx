@@ -1,8 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { mockMembers } from "@/app/org/mockdata";
 import MemberRow from "@/app/org/components/MemberRow";
+import AddProjectMembers from "@/app/org/components/AddProjectMembers";
 
 export default async function MembersPage({ params }: { params: Promise<{ projectId: string }> }) {
     const { projectId } = await params;
@@ -13,7 +12,7 @@ export default async function MembersPage({ params }: { params: Promise<{ projec
             <h1 className="text-base font-bold text-gray-500">{projectName}-{projectId}</h1>
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Members</h2>
-                <Button className="w-[130px] font-bold"><Plus strokeWidth={3} /> Add Member</Button>
+                <AddProjectMembers />
             </div>
 
             <div className="mt-8 border-1 rounded-sm shadow-md shadow-slate-200">

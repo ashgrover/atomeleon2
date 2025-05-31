@@ -3,10 +3,14 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 
-export default function Modal({ className, title, children }: { className?: string, title?: string, children: React.ReactNode }) {
+export default function Modal({ className, title, onClose, children }: { className?: string, title?: string, onClose?: () => void, children: React.ReactNode }) {
     const router = useRouter();
 
     const onCloseDialog = () => {
+        if (onClose) {
+            onClose();
+            return;
+        }
         router.back();
     }
 
