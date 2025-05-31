@@ -16,7 +16,7 @@ export default function AddProjectMembers({ }) {
 
     return (
         <div>
-            <Button className="w-[130px] font-bold" onClick={toggleModal}><Plus strokeWidth={3} /> Add Member</Button>
+            <Button className="w-[145px] font-semibold" onClick={toggleModal}><Plus strokeWidth={3} /> Add Members</Button>
             {!state.isDialogOpen ? null :
                 <Modal title="Add Members" className="sm:max-w-2xl" onClose={() => toggleModal(null)}>
                     <div>
@@ -38,8 +38,8 @@ export default function AddProjectMembers({ }) {
                         </div>
 
                         <div className="mt-8 mb-10 flex gap-3 justify-end">
-                            <Button variant="secondary" className="w-35">Cancel</Button>
-                            <Button className="w-35 bg-sky-500">Add Members</Button>
+                            <Button variant="secondary" className="w-35" onClick={toggleModal}>Cancel</Button>
+                            <Button className="w-35 bg-sky-500 font-semibold">Add Members</Button>
                         </div>
 
                     </div>
