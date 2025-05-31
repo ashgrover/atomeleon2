@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function TimeEntries({ timesheet }: { timesheet: Timesheet }) {
-    const period = `${new Date(timesheet.periodStart).toDateString()} — ${new Date(timesheet.periodEnd).toDateString()}`;
+    const period = `${new Date(timesheet.periodStart).toDateString()} - ${new Date(timesheet.periodEnd).toDateString()}`;
     return (
         <div className="mt-8">
             <div className="flex items-center justify-between">
@@ -16,12 +16,13 @@ export default function TimeEntries({ timesheet }: { timesheet: Timesheet }) {
                     <span className="bg-gray-200 p-2 rounded-2xl mr-2 font-medium">JD</span>
                     <span className="font-bold text-lg">John Doe {timesheet.id}</span>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                    <span className="font-medium">Week</span><p className="text-sm font-medium text-gray-600 p-2 border-1 border-gray-300 rounded-md">May 19 - May 25</p>
                     <Button variant="secondary"><ArrowLeft /></Button>
                     <Button variant="secondary"><ArrowRight /></Button>
                 </div>
             </div>
-            <p className="mt-1 ml-11 text-sm text-slate-600 font-bold">{period}</p>
+            <p className="mt-1 ml-11 text-sm text-slate-600 font-semibold">{period}</p>
 
             <div className="mt-10 border-1 rounded-sm shadow-md shadow-slate-200 relative overflow-auto max-h-[calc(100vh-350px)]">
                 <Table>
