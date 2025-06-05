@@ -2,11 +2,12 @@
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
-import { Calendar, ChevronRight, File, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
+import { Calendar, ChevronRight, ChevronsDown, ChevronsUpDown, File, Hexagon, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
 import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type Project = {
     id: string,
@@ -51,11 +52,25 @@ export default function Panel() {
                 <SidebarHeader>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton asChild>
-                                <a href="#">
-                                    <span className="text-base font-semibold">Atomeleon</span>
-                                </a>
-                            </SidebarMenuButton>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <SidebarMenuButton asChild>
+                                        <div className="bg-gray-100 border-1 flex justify-between px-5 py-6 cursor-pointer">
+                                            <div className="flex items-center gap-2">
+                                                <span className="p-1 border-1 border-gray-400 rounded-lg"><Hexagon fill="#000" /></span><span className="font-semibold">Company Inc</span>
+                                            </div>
+                                            <ChevronsUpDown color="#000000" />
+                                        </div>
+                                    </SidebarMenuButton>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="ml-2 w-55">
+                                    <DropdownMenuItem>Change Organization</DropdownMenuItem>
+                                    <DropdownMenuItem>Settings</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem variant="destructive">Logout</DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
                         </SidebarMenuItem>
                     </SidebarMenu>
                 </SidebarHeader>
