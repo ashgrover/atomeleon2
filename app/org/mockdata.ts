@@ -5,6 +5,7 @@ export const mockTasksData: Task[] = [
     {
         id: "t1",
         publicId: "TK-1",
+        publicKey: "TK-1",
         title: "Task 1",
         estimatedHours: 16,
         actualHours: 8,
@@ -18,6 +19,7 @@ export const mockTasksData: Task[] = [
     {
         id: "t2",
         publicId: "TK-2",
+        publicKey: "TK-2",
         title: "Task 2",
         estimatedHours: 10,
         actualHours: 16,
@@ -31,6 +33,7 @@ export const mockTasksData: Task[] = [
     {
         id: "t3",
         publicId: "TK-3",
+        publicKey: "TK-3",
         title: "Task 3",
         estimatedHours: 24,
         actualHours: 20,
@@ -44,6 +47,7 @@ export const mockTasksData: Task[] = [
     {
         id: "t4",
         publicId: "TK-4",
+        publicKey: "TK-4",
         title: "Feature Request: Enhanced Drag-and-Drop Functionality for Group, Board, and Card Management Feature Request: Enhanced Drag-and-Drop Functionality for Group, Board, and Card Management",
         estimatedHours: 12,
         actualHours: 20,

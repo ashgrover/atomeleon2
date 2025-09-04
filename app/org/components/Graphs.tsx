@@ -151,20 +151,24 @@ export function GraphCommitsAndPRs() {
             label: "Commits",
             color: "var(--chart-2)",
         },
+        prs: {
+            label: "PRs",
+            color: "var(--chart-3)"
+        }
     } satisfies ChartConfig
 
     const chartData = [
-        { week: "Week 1", commits: 25 },
-        { week: "Week 2", commits: 30 },
-        { week: "Week 3", commits: 35 },
-        { week: "Week 4", commits: 15 },
-        { week: "Week 5", commits: 30 },
-        { week: "Week 6", commits: 38 },
+        { week: "Week 1", prs: 1, commits: 25 },
+        { week: "Week 2", prs: 3, commits: 30 },
+        { week: "Week 3", prs: 4, commits: 35 },
+        { week: "Week 4", prs: 1, commits: 15 },
+        { week: "Week 5", prs: 2, commits: 30 },
+        { week: "Week 6", prs: 3, commits: 38 },
     ]
 
     return (
         <div className="my-10 border-1 p-5 rounded-lg shadow-lg shadow-slate-200 max-w-[900] mx-auto">
-            <p className="mb-8 text-sm text-slate-600 font-bold">Commits per Week</p>
+            <p className="mb-8 text-sm text-slate-600 font-bold">Commits and PRs per Week</p>
             <ChartContainer config={chartConfig}>
                 <BarChart accessibilityLayer data={chartData} margin={{ left: 20, top: 20, right: 20, bottom: 10 }}>
                     <CartesianGrid vertical={false} />
@@ -180,6 +184,7 @@ export function GraphCommitsAndPRs() {
                     />
                     <Legend />
                     <Bar name="Commits per week" dataKey="commits" barSize={50} fill="var(--color-commits)" radius={4} label={{ position: "top", fill: "#000" }} />
+                    <Bar name="PRs per week" dataKey="prs" barSize={50} fill="var(--color-prs)" radius={4} label={{ position: "top", fill: "#000" }} />
                 </BarChart>
             </ChartContainer>
         </div>

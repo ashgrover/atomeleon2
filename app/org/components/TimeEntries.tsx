@@ -121,7 +121,7 @@ function TimeEntriesRow({ timesheet }: { timesheet: Timesheet }) {
 
 function TotalRow({ timesheet }: { timesheet: Timesheet }) {
     return (
-        <TableRow className="bg-gray-100 sticky bottom-0">
+        <TableRow className="bg-gray-100 hover:bg-gray-100 sticky bottom-0">
             <TableCell colSpan={3} className="font-bold">
                 <span className="ml-16">Total Hours</span>
             </TableCell>

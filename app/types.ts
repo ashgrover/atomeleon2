@@ -20,6 +20,7 @@ export const enum TaskStatus {
 export type Task = {
     id: string,
     publicId?: string,
+    publicKey?: string,
     projectId?: string,
     title: string,
     type?: string,
