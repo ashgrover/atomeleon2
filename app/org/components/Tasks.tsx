@@ -13,7 +13,7 @@ import PullRequests from "./PullRequests";
 import TaskHourLog from "./TaskHourLog";
 import { Badge } from "@/components/ui/badge";
 
-export default function Tasks({ projectId, orgMemberId, className }: { projectId: string, orgMemberId?: string, className?: string }) {
+export default function Tasks({ projectId, orgMemberId, className, limit = 10 }: { projectId: string, orgMemberId?: string, className?: string, limit: number }) {
     return (
         <div className={`border-1 rounded-sm shadow-md shadow-slate-200 ${className}`}>
             <Table>
@@ -32,9 +32,9 @@ export default function Tasks({ projectId, orgMemberId, className }: { projectId
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {mockTasksData.map((task, index) => (
+                    {mockTasksData.map((task, index) => index + 1 <= limit ? (
                         <TaskRow key={task.id} task={task} hasPR={index % 2 === 0} />
-                    ))}
+                    ) : null)}
                 </TableBody>
             </Table>
         </div>

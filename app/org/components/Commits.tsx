@@ -11,7 +11,7 @@ export default function Commits({ title = "Commit Activity", commits, className 
                     {commits.map(commit => (
                         <li key={commit.id} className="flex gap-x-2">
                             <p className="font-medium">{commit.timestamp}</p> |
-                            <p>{commit.author}</p> |
+                            <a href="" className="text-blue-600 underline">{commit.author}</a> |
                             <a href={commit.url} className="text-blue-600 underline" target="_blank">{commit.publicId}</a> |
                             <p>{commit.message}</p>
                         </li>

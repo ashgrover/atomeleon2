@@ -41,9 +41,9 @@ export default function MemberRow({ projectId, member }: { projectId: string, me
                     <TableRow className="hover:bg-transparent">
                         <TableCell colSpan={8}>
                             <p className="mb-3 ml-8 font-bold text-xs">Assigned Tasks</p>
-                            <Tasks className="ml-8 bg-neutral-50" projectId={projectId} orgMemberId={member.orgMemberId} />
+                            <Tasks className="ml-8 bg-neutral-50" projectId={projectId} orgMemberId={member.orgMemberId} limit={2} />
                             <div className="my-5" />
-                            
+
                             <Commits title="Member Commits" commits={mockCodeCommits} className="max-h-80 overflow-auto " />
                         </TableCell>
                     </TableRow>
