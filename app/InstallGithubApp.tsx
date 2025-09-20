@@ -14,7 +14,9 @@ export default function InstallGithubApp() {
                 console.log("installationId", installationId);
                 installationIdRef.current = installationId;
             }
-            if (userCode && !userCodeRef.current) {
+            console.log("Client-UserCode", userCode)
+            if (userCode) {
+            // if (userCode && !userCodeRef.current) {
                 userCodeRef.current = userCode;
                 console.log("userCode", userCode);
 
@@ -31,7 +33,7 @@ export default function InstallGithubApp() {
                 });
 
                 const result = await res.json();
-                if (result.success) {
+                if (result.success && result.access_token) {
                     console.log("User Access Token", result.access_token)
                     getUserInstallations(result.access_token);
                 }
@@ -51,16 +53,20 @@ export default function InstallGithubApp() {
             }
         });
 
+        const result = await res.json();
+        console.log("result", result)
+
     }
 
     const onClick = () => {
         const url = "https://github.com/apps/someorgapp/installations/new?state=123"
+        // const url2 = "https://github.com/apps/someorgapp/installations/86571169/"
         openWindow(url);
     }
 
     return (
         <button title="Click Me" onClick={onClick}>
-            <p style={{ color: "white" }}> CLick</p>
+            <p className="bg-blue-200 p-2 rounded-lg m-5 cursor-pointer hover:bg-blue-300">Github Install</p>
         </button>
     );
 }

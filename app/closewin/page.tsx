@@ -12,17 +12,16 @@ export default function CloseWin() {
 
     try {
         if (installationId) {
-
             window.opener?.postMessage({ installationId }, "*");
+
             const clientId = "Iv23linNrsFe7b8xf4lJ"
             const redirectUrl = "http://localhost:3000/closewin";
             router.push(`https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}`);
         }
         else if (userCode) {
             window.opener?.postMessage({ userCode }, "*");
-             // window.close();
+            // window.close();
         }
-
     }
     catch { }
 

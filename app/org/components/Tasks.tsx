@@ -11,7 +11,6 @@ import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import TaskStatusBadge from "./TaskStatusBadge";
 import PullRequests from "./PullRequests";
 import TaskHourLog from "./TaskHourLog";
-import { Badge } from "@/components/ui/badge";
 
 export default function Tasks({ projectId, orgMemberId, className, limit = 10 }: { projectId: string, orgMemberId?: string, className?: string, limit: number }) {
     return (
@@ -29,6 +28,7 @@ export default function Tasks({ projectId, orgMemberId, className, limit = 10 }:
                         <TableHead className="w-3xs font-bold text-slate-600">Assignees</TableHead>
                         <TableHead className="w-3xs font-bold text-slate-600">Created Date</TableHead>
                         <TableHead className="w-3xs font-bold text-slate-600">Cost</TableHead>
+                        <TableHead className="w-3xs font-bold text-slate-600">Commits</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -90,6 +90,7 @@ function TaskRow({ task, hasPR = false }: { task: Task, hasPR?: boolean }) {
                 <TableCell>{task.assignees?.join(", ")}</TableCell>
                 <TableCell>{task.createdDate}</TableCell>
                 <TableCell className="">$5500.00</TableCell>
+                <TableCell className="">2</TableCell>
             </TableRow>
 
             {!state.isExpanded ? null :
