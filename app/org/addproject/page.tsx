@@ -1,10 +1,26 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { getInstallationId } from "@/lib/database";
+import octokitApp from "@/lib/octokitapp";
 
 
 export default function AddProjectPage() {
+    const openGithub = () => {
+        const url = "https://github.com/apps/someorgapp/installations/new";
+        openWindow(url);
+    }
+
+    const getRepositories = async () => {
+        const installationId = getInstallationId();
+        if (!installationId) return null;
+        const octokit = await octokitApp.getInstallationOctokit(parseInt(installationId));
+        octokit.request()
+    }
+
     return (
         <div className="w-3xl mx-10 mt-5">
             <h1 className="text-2xl font-semibold">New Project</h1>
@@ -42,7 +58,7 @@ export default function AddProjectPage() {
                         </div>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <Button variant="secondary">GitHub (repo & issues)</Button>
+                        <Button variant="secondary" onClick={openGithub}>GitHub (repo & issues)</Button>
                         <Button variant="secondary">Bitbucket</Button>
                         <Button variant="secondary">Azure Repos</Button>
                     </div>
@@ -52,3 +68,27 @@ export default function AddProjectPage() {
         </div>
     )
 }
+
+
+function openWindow(url: string) {
+    const width = 800;
+    const height = 600;
+    const left = (screen.width - width) / 2;
+    const top = (screen.height - height) / 2;
+    window.open(
+        url,
+        "targetWindow",
+        `toolbar=no, 
+        width=${width},
+        height=${height}, 
+        left=${left}, 
+        top=${top}, 
+        location=no, 
+        status=no,
+        menubar=no,
+        scrollbars=yes,
+        resizable=yes)`
+    );
+}
+
+

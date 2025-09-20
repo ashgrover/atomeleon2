@@ -59,8 +59,9 @@ export default function InstallGithubApp() {
     }
 
     const onClick = () => {
-        const url = "https://github.com/apps/someorgapp/installations/new?state=123"
+        // const url = "https://github.com/apps/someorgapp/installations/new?state=123"
         // const url2 = "https://github.com/apps/someorgapp/installations/86571169/"
+        const url = "https://github.com/apps/someorgapp/installations/new";
         openWindow(url);
     }
 
@@ -74,6 +75,7 @@ export default function InstallGithubApp() {
 function openWindow(url: string) {
     const width = 800;
     const height = 600;
+    
     const left = (screen.width - width) / 2;
     const top = (screen.height - height) / 2;
     window.open(
