@@ -15,6 +15,8 @@ export default function AddProjectPage() {
     }
 
     const getRepositories = async () => {
+        // Rest API
+    
         const installationId = getInstallationId();
         if (!installationId) return null;
         const octokit = await octokitApp.getInstallationOctokit(parseInt(installationId));

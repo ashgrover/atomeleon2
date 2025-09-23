@@ -1,6 +1,7 @@
 "use client"
 
 import { saveInstallationId } from "@/lib/database";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
@@ -15,28 +16,12 @@ export default function VerifyInstallationId() {
             if (!installationId) return null;
 
             if (installationId && !userCode) {
-                const clientId = "Iv23linNrsFe7b8xf4lJ";
-                const redirectUrl = `http://localhost:3000/verify?installation_id=${installationId}`;
-                const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}`;
-                router.push(url);
-                return null;
+                authorizeUserWithOAuth(router, installationId);
             }
 
-            if (!userCode) return;
+            if (!userCode) return null;
+            const accessToken = await getUserAcessToken(userCode);
 
-            console.log("InstallationId=", installationId);
-            const response = await fetch("/verify/api", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    userCode
-                })
-            });
-
-            const result = await response.json();
-            const accessToken = result?.access_token;
             console.log("InstallationId=", installationId, "AccessToken=", accessToken);
 
             const hasInstallation = await checkUserInstallation(installationId, accessToken);
@@ -55,6 +40,29 @@ export default function VerifyInstallationId() {
             Loading...
         </div>
     )
+}
+
+async function authorizeUserWithOAuth(router: AppRouterInstance, installationId: string,) {
+    const clientId = "Iv23linNrsFe7b8xf4lJ";
+    const redirectUrl = `http://localhost:3000/verify?installation_id=${installationId}`;
+    const url = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}`;
+    router.push(url);
+    return null;
+}
+
+async function getUserAcessToken(userCode: string) {
+    const response = await fetch("/verify/api", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            userCode
+        })
+    });
+
+    const result = await response.json();
+    return result?.access_token;
 }
 
 async function checkUserInstallation(installationId: string, userAccessToken: string) {
