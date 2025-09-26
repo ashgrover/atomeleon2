@@ -1,9 +1,25 @@
 import Tasks from "@/app/org/components/Tasks";
+import octokitApp from "@/lib/octokitapp";
 
 export default async function ProjectTasksPage({ params }: { params: Promise<{ projectId: string, orgMemberId?: string }> }) {
-
     const { projectId, orgMemberId } = await params;
     const projectName = "Project";
+
+    try {
+        const installationId: number = 87501622;
+        const octokit = await octokitApp.getInstallationOctokit(installationId);
+        const result = await octokit.request("GET /repos/ashgrover/atomeleon/issues", {
+            owner: "ashgrover",
+            repo: "atomeleon",
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        });
+
+        console.log(result.data);
+    } catch (err) {
+        console.log(err)
+    }
 
     return (
         <div className="p-5">

@@ -82,7 +82,7 @@ async function checkUserInstallation(installationId: string, userAccessToken: st
     const result = await response.json();
     if (result?.total_count <= 0) return false;
 
-    const hasInstallation = result.installations.some(installation => String(installation.id) === installationId);
+    const hasInstallation = result.installations.some((installation: { id: number; }) => String(installation.id) === installationId);
     console.log("hasInstallation", installationId, result.installations, hasInstallation)
     return hasInstallation;
 }   

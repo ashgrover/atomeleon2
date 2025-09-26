@@ -11,8 +11,10 @@ import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import TaskStatusBadge from "./TaskStatusBadge";
 import PullRequests from "./PullRequests";
 import TaskHourLog from "./TaskHourLog";
+import octokitApp from "@/lib/octokitapp";
 
-export default function Tasks({ projectId, orgMemberId, className, limit = 10 }: { projectId: string, orgMemberId?: string, className?: string, limit: number }) {
+export default function Tasks({ projectId, orgMemberId, className, limit = 10 }: { projectId: string, orgMemberId?: string, className?: string, limit?: number }) {
+
     return (
         <div className={`border-1 rounded-sm shadow-md shadow-slate-200 ${className}`}>
             <Table>
