@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Check, Plus, Search } from "lucide-react";
 import { useState } from "react";
-import Modal from "./Modal";
+import Modal from "@/components/org/Modal";
 import { Input } from "@/components/ui/input";
 
 export default function AddProjectMembers({ }) {

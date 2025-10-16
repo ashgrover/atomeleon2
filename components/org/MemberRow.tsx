@@ -3,9 +3,9 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { ProjectMember } from "@/app/types";
-import { mockCodeCommits, mockOrgMembers } from "../mockdata";
+import { mockCodeCommits, mockOrgMembers } from "../../app/org/mockdata";
 import Commits from "./Commits";
-import Tasks from "./Tasks";
+import Tasks from "@/components/org/Tasks";
 import { Badge } from "@/components/ui/badge";
 
 export default function MemberRow({ projectId, member }: { projectId: string, member: ProjectMember }) {

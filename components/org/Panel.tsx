@@ -131,7 +131,7 @@ export default function Panel() {
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <SidebarMenuAction className="cursor-pointer" asChild>
-                                                <Link href="/org/addproject"><Plus /></Link>
+                                                <Link href="/org/add-project"><Plus /></Link>
                                             </SidebarMenuAction>
                                         </TooltipTrigger>
                                         <TooltipContent>

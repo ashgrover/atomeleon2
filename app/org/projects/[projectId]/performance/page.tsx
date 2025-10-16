@@ -1,5 +1,5 @@
-import { GraphCommitsAndPRs, GraphEstimatedCostVsActualCost, GraphHoursLoggedVsTasksCompleted, GraphEstimatedHoursVsActualHours } from "@/app/org/components/Graphs";
-import Metrics from "@/app/org/components/Metrics";
+import { GraphCommitsAndPRs, GraphEstimatedCostVsActualCost, GraphHoursLoggedVsTasksCompleted, GraphEstimatedHoursVsActualHours } from "@/components/org/Graphs";
+import Metrics from "@/components/org/Metrics";
 
 
 export default async function Performance({ params }: { params: Promise<{ projectId: string }> }) {

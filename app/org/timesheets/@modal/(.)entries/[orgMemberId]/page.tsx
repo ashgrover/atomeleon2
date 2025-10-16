@@ -1,6 +1,6 @@
 
-import Modal from "@/app/org/components/Modal";
-import TimeEntries from "@/app/org/components/TimeEntries";
+import Modal from "@/components/org/Modal";
+import TimeEntries from "@/components/org/TimeEntries";
 import { MockTimesheets } from "@/app/org/mockdata";
 
 export default async function EntriesModalPage({ params }: { params: Promise<{ timesheetId: string }> }) {

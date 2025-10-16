@@ -1,5 +1,5 @@
-import BudgetBurndownChart from "@/app/org/components/BudgetBurdownChart";
-import DataChart from "@/app/org/components/DataChart";
+import BudgetBurndownChart from "@/components/org/BudgetBurdownChart";
+import DataChart from "@/components/org/DataChart";
 import { Button } from "@/components/ui/button";
 
 

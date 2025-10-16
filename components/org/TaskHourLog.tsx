@@ -1,4 +1,4 @@
-import { mockCodeCommits } from "../mockdata";
+import { mockCodeCommits } from "../../app/org/mockdata";
 import { Badge } from "@/components/ui/badge";
 
 export default function TaskHourLog({ className }: { className?: string }) {

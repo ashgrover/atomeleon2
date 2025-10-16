@@ -1,7 +1,7 @@
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { mockMembers } from "@/app/org/mockdata";
-import MemberRow from "@/app/org/components/MemberRow";
-import AddProjectMembers from "@/app/org/components/AddProjectMembers";
+import MemberRow from "@/components/org/MemberRow";
+import AddProjectMembers from "@/components/org/AddProjectMembers";
 
 export default async function MembersPage({ params }: { params: Promise<{ projectId: string }> }) {
     const { projectId } = await params;
