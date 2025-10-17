@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
-import supabase from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
@@ -20,6 +20,7 @@ export default function LoginPage() {
         e.preventDefault();
         setLoading(true);
         try {
+            const supabase = createSupabaseBrowserClient();
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
             if (error) throw error;
             console.log(data);

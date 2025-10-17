@@ -1,7 +1,18 @@
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TYPE org_type AS ENUM ('company', 'agency', 'startup', 'nonprofit', 'educational', 'government', 'none');
+
 CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     public_id TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
+    org_type org_type NOT NULL DEFAULT 'none'
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -17,17 +28,9 @@ CREATE TYPE integration_type AS ENUM (
 CREATE TABLE organizations_integrations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    integration_type integration_type NOT NULL DEFAULT 'none'
+    integration_type integration_type NOT NULL DEFAULT 'none',
     external_installation_id TEXT,                -- GitHub installation ID (unique per org)
     metadata JSONB DEFAULT '{}'::JSONB,  -- any provider-specific details
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -60,7 +63,7 @@ CREATE TABLE projects (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     repo_url TEXT,
-    org_integration_id UUID REFERENCES organizations_integrations(id) ON DELETE SET NULL,
+    org_integration_id UUID REFERENCES organizations_integrations(id) ON DELETE SET NULL
 );
 
 
@@ -191,6 +194,31 @@ FOR EACH ROW
 EXECUTE FUNCTION cleanup_user_projects_on_project_org_change();
 
 
+-- uuidv7 function, from: https://gist.github.com/kjmph/5bd772b2c2df145aa645b837da7eca74
+create or replace function uuid_generate_v7()
+returns uuid
+language plpgsql
+volatile
+set search_path = ''
+as $$
+begin
+  -- use random v4 uuid as starting point (which has the same variant we need)
+  -- then overlay timestamp
+  -- then set version 7 by flipping the 2 and 1 bit in the version 4 string
+  return encode(
+    set_bit(
+      set_bit(
+        overlay(uuid_send(gen_random_uuid())
+                placing substring(int8send(floor(extract(epoch from clock_timestamp()) * 1000)::bigint) from 3)
+                from 1 for 6
+        ),
+        52, 1
+      ),
+      53, 1
+    ),
+    'hex')::uuid;
+end
+$$;
 
 
 -- For later

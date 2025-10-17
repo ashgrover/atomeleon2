@@ -1,5 +1,8 @@
 
 
+export const ORG_TYPES = ["company", "agency", "startup", "nonprofit", "educational", "government", "none"] as const;
+export type OrgType = typeof ORG_TYPES[number];
+
 export type Project = {
     id: string,
     orgId: string,
