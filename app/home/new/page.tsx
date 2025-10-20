@@ -14,27 +14,31 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { ORG_TYPES, OrgType } from "@/app/types"
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 
 export default function CreateOrganizationPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [orgType, setOrgType] = useState<OrgType>(ORG_TYPES[0]);
     const [orgName, setOrgName] = useState("");
+    const [errorState, setErrorState] = useState("");
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setLoading(true)
+        e.preventDefault();
+        setLoading(true);
 
-        // Simulate API call or Supabase request
-        await new Promise((r) => setTimeout(r, 1000))
-
-        // Replace this with actual createOrg API logic
-        console.log({
-            name: orgName,
-            type: orgType,
+        const supabase = createSupabaseBrowserClient();
+        const { error } = await supabase.functions.invoke("create-org", {
+            body: { org_name: orgName, org_type: orgType }
         })
-
         setLoading(false);
+
+        if (error) {
+            console.log("Error:",error);
+            setErrorState("Couldn't create organization. Something went wrong!")
+            return;
+        }
+
         router.push("/home") // redirect after creation
     }
 
@@ -80,6 +84,8 @@ export default function CreateOrganizationPage() {
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {errorState && <p className="text-sm text-red-500">{errorState}</p>}
 
                     <div className="flex justify-between">
                         <Button variant="outline" onClick={onCancel}>

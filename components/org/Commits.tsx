@@ -1,5 +1,5 @@
 import { CodeCommit } from "@/app/types";
-import { mockCodeCommits } from "../../app/org/mockdata";
+import { mockCodeCommits } from "../../app/org/[org-id]/mockdata";
 import { Badge } from "@/components/ui/badge";
 
 export default function Commits({ title = "Commit Activity", commits, className }: { title?: string, commits: CodeCommit[], className?: string }) {

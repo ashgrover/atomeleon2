@@ -11,7 +11,7 @@ CREATE TYPE org_type AS ENUM ('company', 'agency', 'startup', 'nonprofit', 'educ
 CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     public_id TEXT UNIQUE NOT NULL,
-    name TEXT NOT NULL,
+    org_name TEXT NOT NULL,
     org_type org_type NOT NULL DEFAULT 'none'
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
@@ -38,11 +38,10 @@ CREATE TABLE organizations_integrations (
 CREATE TYPE user_role AS ENUM ('admin', 'pm', 'contractor');
 
 CREATE TABLE user_organizations (
-    public_id TEXT UNIQUE NOT NULL,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     role user_role NOT NULL DEFAULT 'contractor',  -- 'admin', 'pm', 'contractor',
-    hourly_rate DECIMAL(10,2),
+    hourly_rate DECIMAL(10,2) DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     PRIMARY KEY(user_id, organization_id)
@@ -219,6 +218,41 @@ begin
     'hex')::uuid;
 end
 $$;
+
+-- Create Org function
+create or replace function create_org (
+org_public_id text,
+org_name text, 
+org_type org_type)
+
+returns boolean
+language plpgsql
+set search_path = ''
+as $$
+declare
+  org_id uuid; 
+begin
+  insert into public.organizations(public_id, org_name, org_type)
+  values (org_public_id, org_name, org_type)
+  returning id into org_id;
+
+  insert into public.user_organizations(user_id, organization_id, role)
+  values(auth.uid(), org_id, 'admin');
+  return true;
+
+  exception
+    when others then
+      raise exception 'Insert failed: %', sqlerrm;
+      return false;
+end;
+$$;
+
+-- User-Orgs View
+create or replace view user_orgs_view with(security_invoker=true) as
+  select o.id, o.public_id, o.org_name, o.org_type
+  from organizations o
+  join user_organizations u on o.id = u.organization_id
+  where u.user_id = auth.uid();
 
 
 -- For later

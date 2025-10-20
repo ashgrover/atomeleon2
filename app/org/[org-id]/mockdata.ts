@@ -1,4 +1,4 @@
-import { CodeCommit, ProjectMember, OrgMember, Task, TaskStatus, OrgMemberType, Timesheet, TimesheetStatus } from "../types";
+import { CodeCommit, ProjectMember, OrgMember, Task, TaskStatus, OrgMemberType, Timesheet, TimesheetStatus } from "../../types";
 
 
 export const mockTasksData: Task[] = [

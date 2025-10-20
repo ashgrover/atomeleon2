@@ -3,7 +3,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { ProjectMember } from "@/app/types";
-import { mockCodeCommits, mockOrgMembers } from "../../app/org/mockdata";
+import { mockCodeCommits, mockOrgMembers } from "../../app/org/[org-id]/mockdata";
 import Commits from "./Commits";
 import Tasks from "@/components/org/Tasks";
 import { Badge } from "@/components/ui/badge";
