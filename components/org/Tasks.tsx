@@ -1,6 +1,6 @@
 "use client";
 
-import { mockCodeCommits, mockTasksData } from "@/app/org/[org-id]/mockdata";
+import { mockCodeCommits, mockTasksData } from "@/app/org/[orgId]/mockdata";
 import { Table, TableBody, TableHead, TableHeader, TableCell, TableRow } from "@/components/ui/table";
 import { Task } from "@/app/types";
 import { ChevronRight, GitPullRequest } from "lucide-react";

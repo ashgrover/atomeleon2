@@ -1,5 +1,5 @@
 import TimeEntries from "@/components/org/TimeEntries";
-import { MockTimesheets } from "@/app/org/[org-id]/mockdata";
+import { MockTimesheets } from "@/app/org/[orgId]/mockdata";
 
 
 

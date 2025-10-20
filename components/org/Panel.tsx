@@ -2,11 +2,10 @@
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useEffect, useState } from "react";
-import { Calendar, ChevronRight, ChevronsDown, ChevronsUpDown, File, Hexagon, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
+import { Calendar, ChevronRight, ChevronsUpDown, Hexagon, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
 import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type Project = {
@@ -18,7 +17,7 @@ type State = {
     projects: Array<Project>
 }
 
-export default function Panel() {
+export default function Panel({ orgId }: { orgId: string }) {
     // Menu items.
 
     const [state, setState] = useState<State>({ projects: [] });
@@ -64,7 +63,11 @@ export default function Panel() {
                                     </SidebarMenuButton>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="ml-2 w-55">
-                                    <DropdownMenuItem>Change Organization</DropdownMenuItem>
+                                    <Link href="/home">
+                                        <DropdownMenuItem>
+                                            <span className="font-medium">Change Organization</span>
+                                        </DropdownMenuItem>
+                                    </Link>
                                     <DropdownMenuItem>Settings</DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem variant="destructive">Logout</DropdownMenuItem>
@@ -90,7 +93,7 @@ export default function Panel() {
 
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
-                                        <Link href="/org/timesheets">
+                                        <Link href="/org/${orgId}/timesheets">
                                             <Calendar />
                                             <span className="font-medium">Timesheets</span>
                                         </Link>
@@ -122,7 +125,7 @@ export default function Panel() {
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 {/* <Button size="sm" variant="default" className="font-bold min-w-50 mx-auto">
-                                    <Link href="/org/addproject">Add Project</Link>
+                                    <Link href="/org/${orgId}addproject">Add Project</Link>
                                 </Button> */}
                                 <SidebarMenuItem>
                                     <SidebarMenuButton asChild>
@@ -131,7 +134,7 @@ export default function Panel() {
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <SidebarMenuAction className="cursor-pointer" asChild>
-                                                <Link href="/org/add-project"><Plus /></Link>
+                                                <Link href="/org/${orgId}/add-project"><Plus /></Link>
                                             </SidebarMenuAction>
                                         </TooltipTrigger>
                                         <TooltipContent>
@@ -155,22 +158,22 @@ export default function Panel() {
                                                 <SidebarMenuSub>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                                            <Link href={`/org/projects/${project.id}/budget`}>Budget</Link>
+                                                            <Link href={`/org/${orgId}/projects/${project.id}/budget`}>Budget</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                                            <Link href={`/org/projects/${project.id}/members`}>Members</Link>
+                                                            <Link href={`/org/${orgId}/projects/${project.id}/members`}>Members</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                                            <Link href={`/org/projects/${project.id}/tasks`}>Tasks</Link>
+                                                            <Link href={`/org/${orgId}/projects/${project.id}/tasks`}>Tasks</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                     <SidebarMenuSubItem>
                                                         <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                                            <Link href={`/org/projects/${project.id}/performance`}>Performance</Link>
+                                                            <Link href={`/org/${orgId}/projects/${project.id}/performance`}>Performance</Link>
                                                         </SidebarMenuSubButton>
                                                     </SidebarMenuSubItem>
                                                 </SidebarMenuSub>

@@ -1,5 +1,5 @@
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { mockMembers } from "@/app/org/[org-id]/mockdata";
+import { mockMembers } from "@/app/org/[orgId]/mockdata";
 import MemberRow from "@/components/org/MemberRow";
 import AddProjectMembers from "@/components/org/AddProjectMembers";
 
