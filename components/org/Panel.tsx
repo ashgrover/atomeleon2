@@ -134,7 +134,7 @@ export default function Panel({ orgId }: { orgId: string }) {
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <SidebarMenuAction className="cursor-pointer" asChild>
-                                                <Link href="/org/${orgId}/add-project"><Plus /></Link>
+                                                <Link href={`/org/${orgId}/add-project`}><Plus /></Link>
                                             </SidebarMenuAction>
                                         </TooltipTrigger>
                                         <TooltipContent>

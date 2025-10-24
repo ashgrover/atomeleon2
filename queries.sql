@@ -53,11 +53,11 @@ CREATE TABLE projects (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     public_id TEXT UNIQUE NOT NULL,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
-    description TEXT,
+    proj_name TEXT NOT NULL,
+    proj_desc TEXT,
     status project_status DEFAULT 'active', -- 'active', 'completed', 'archived',
-    budget DECIMAL(10,2),
-    start_date TIMESTAMPTZ,
+    budget DECIMAL(10,2) DEFAULT 0,
+    start_date TIMESTAMPTZ DEFAULT now(),
     end_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
@@ -221,7 +221,7 @@ $$;
 
 -- Create Org function
 create or replace function create_org (
-org_public_id text,
+public_id text,
 org_name text, 
 org_type org_type)
 
@@ -233,7 +233,7 @@ declare
   org_id uuid; 
 begin
   insert into public.organizations(public_id, org_name, org_type)
-  values (org_public_id, org_name, org_type)
+  values (public_id, org_name, org_type)
   returning id into org_id;
 
   insert into public.user_organizations(user_id, organization_id, role)
@@ -253,6 +253,46 @@ create or replace view user_orgs_view with(security_invoker=true) as
   from organizations o
   join user_organizations u on o.id = u.organization_id
   where u.user_id = auth.uid();
+
+-- Create Project function
+create or replace function create_project (
+org_public_id text,
+public_id text,
+proj_name text,
+proj_desc text,
+budget decimal)
+
+returns boolean
+language plpgsql
+set search_path = ''
+as $$
+declare
+  org_id uuid;
+  proj_id uuid; 
+begin
+  select id into org_id 
+  from public.organizations org 
+  where org.public_id = org_public_id;
+  
+  if org_id is null then
+    raise exception 'Invalid organization: %', public_id;
+  end if;
+
+  insert into public.projects(public_id, organization_id, proj_name, proj_desc, budget)
+  values (public_id, org_id, proj_name, proj_desc, budget)
+  returning id into proj_id;
+
+  insert into public.user_projects(user_id, project_id)
+  values(auth.uid(), proj_id);
+  return true;
+
+  exception
+    when others then
+      raise exception 'Insert failed: %', sqlerrm;
+      return false;
+end;
+$$;
+
 
 
 -- For later

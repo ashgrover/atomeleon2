@@ -5,31 +5,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getInstallationId, saveRepo } from "@/lib/database";
-import { useEffect, useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { use, useEffect, useState } from "react";
 
 type Repo = {
     id: number,
     name: string,
-    full_name: string
+    fullName: string
 }
-type StateType = {
+type FormState = {
+    projName: string,
+    projDesc: string,
+    budget: number,
+}
+type RepoState = {
     repos: Repo[],
     selectedRepo: Repo | null,
 };
 
-export default function AddProjectPage() {
+export default function AddProjectPage({ params }: { params: Promise<{ orgId: string }> }) {
     console.log("AddProjectPage")
-    const [state, setState] = useState<StateType>({ repos: [], selectedRepo: null });
+    const { orgId } = use(params);
 
-    const openGithub = () => {
-        const url = "https://github.com/apps/someorgapp/installations/new";
-        openWindow(url);
-    }
-
-    const onSelectRepository = (repo: Repo) => {
-        setState(state => ({ ...state, selectedRepo: repo }));
-        saveRepo(repo);
-    }
+    const [formState, setFormState] = useState<FormState>({ projName: "", projDesc: "", budget: 0 });
+    const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null });
 
     useEffect(() => {
         async function getRepos() {
@@ -48,13 +47,42 @@ export default function AddProjectPage() {
 
             const result = await response.json();
             if (result.success) {
-                setState(state => ({ ...state, repos: result.data }))
+                setRepoState(state => ({ ...state, repos: result.data }))
             }
             console.log("GetRepos", result);
         }
 
-        getRepos();
+        // getRepos();
     }, []);
+
+
+    const openGithub = () => {
+        const url = "https://github.com/apps/someorgapp/installations/new";
+        openWindow(url);
+    }
+
+    const onSelectRepository = (repo: Repo) => {
+        setRepoState(state => ({ ...state, selectedRepo: repo }));
+        saveRepo(repo);
+    }
+
+    const onAddProject = async () => {
+        try {
+            const supabase = createSupabaseBrowserClient();
+            const result = await supabase.functions.invoke("create-project", {
+                body: {
+                    org_public_id: orgId,
+                    proj_name: formState.projName,
+                    proj_desc: formState.projDesc,
+                    budget: formState.budget
+                }
+            });
+
+            if (result.error) throw result.error;
+        } catch (err: unknown) {
+            console.log(err instanceof Error ? err.message : "");
+        }
+    }
 
     return (
         <div className="w-3xl mx-10 mt-5">
@@ -62,18 +90,21 @@ export default function AddProjectPage() {
 
             <div className="flex flex-col gap-10 mt-10">
                 <div className="grid gap-3">
-                    <Label htmlFor="title-label">Title</Label>
-                    <Input type="text" id="title-label" aria-labelledby="title-label" />
+                    <Label htmlFor="title-label">Name</Label>
+                    <Input type="text" id="title-label" aria-labelledby="title-label"
+                        onChange={(e) => setFormState(state => ({ ...state, projName: e.target.value }))} />
                 </div>
 
                 <div className="grid gap-3">
                     <Label htmlFor="desc-label">Description</Label>
-                    <Textarea id="desc-label" aria-labelledby="desc-label" />
+                    <Textarea id="desc-label" aria-labelledby="desc-label"
+                        onChange={(e) => setFormState(state => ({ ...state, projDesc: e.target.value }))} />
                 </div>
 
                 <div className="grid gap-3">
                     <Label htmlFor="budget-label">Budget</Label>
-                    <Input type="number" id="title-label" aria-labelledby="budget-label" />
+                    <Input type="number" id="title-label" aria-labelledby="budget-label"
+                        onChange={(e) => setFormState(state => ({ ...state, budget: Number(e.target.value) }))} />
                 </div>
 
                 <div className="grid gap-3">
@@ -85,13 +116,13 @@ export default function AddProjectPage() {
                 </div>
                 <div className="grid gap-3">
                     <Label>Connect Repository</Label>
-                    <div className={`${state.repos.length ? "" : "hidden"}`}>
+                    <div className={`${repoState.repos.length ? "" : "hidden"}`}>
                         <p className="text-sm text-gray-500 font-medium my-2">Available Repositories</p>
                         <div className="border-1 rounded-lg p-3 flex flex-col divide-y">
-                            {state.repos.map(repo => (
+                            {repoState.repos.map(repo => (
                                 <div key={repo.id}
                                     className="text-sm font-medium py-1 cursor-pointer"
-                                    onClick={() => onSelectRepository(repo)}>{repo.full_name}</div>
+                                    onClick={() => onSelectRepository(repo)}>{repo.fullName}</div>
                             ))}
 
                         </div>
@@ -103,7 +134,7 @@ export default function AddProjectPage() {
                     </div>
                 </div>
             </div>
-            <Button className="mt-10 w-50">Add Project</Button>
+            <Button className="mt-10 w-50" onClick={onAddProject}>Add Project</Button>
         </div>
     )
 }

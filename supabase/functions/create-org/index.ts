@@ -20,6 +20,15 @@ Deno.serve(async (req) => {
     }
 
     try {
+
+        // const p_id = uuidv7();
+        const { org_name, org_type } = await req.json();
+        if (!org_name || !org_type) throw new Error("Fields are empty!");
+
+        const alphanumericAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        const nanoid = customAlphabet(alphanumericAlphabet, 12);
+        const public_id = nanoid();
+
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? "",
@@ -30,21 +39,13 @@ Deno.serve(async (req) => {
             },
         );
 
-        // const p_id = uuidv7();
-        const alphanumericAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        const nanoid = customAlphabet(alphanumericAlphabet, 12);
-        const org_public_id = nanoid();
-        const { org_name, org_type } = await req.json();
-
         const result = await supabase.rpc("create_org", {
-            org_public_id,
+            public_id,
             org_name: org_name,
             org_type: org_type,
         });
 
-        if (result.error) {
-            throw result.error;
-        }
+        if (result.error) throw result.error;
 
         const { data, error } = await supabase.from("organizations").select("*");
 
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
             throw error;
         }
 
-        return new Response(JSON.stringify({ data }), {
+        return new Response(JSON.stringify({ data, success: true }), {
             headers: {
                 ...corsHeaders,
                 "Content-Type": "application/json",

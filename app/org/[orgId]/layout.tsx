@@ -1,7 +1,7 @@
 import Panel from "@/components/org/Panel";
 
-export default function OrgLayout({ children, params }: { children: React.ReactNode, params: { orgId: string } }) {
-    const { orgId } = params;
+export default async function OrgLayout({ children, params }: { children: React.ReactNode, params: Promise<{ orgId: string }> }) {
+    const { orgId } = await params;
 
     return (
         <div className="flex justify-start">
