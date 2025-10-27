@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ type RepoState = {
     selectedRepo: Repo | null,
 };
 
-export default function AddProjectPage({ params }: { params: Promise<{ orgId: string }> }) {
+export default function EditProjectPage({ params }: { params: Promise<{ orgId: string }> }) {
     const { orgId } = use(params);
     const [formState, setFormState] = useState<FormState>({ projName: "", projDesc: "", budget: 0 });
     const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null });
@@ -44,7 +45,7 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
         saveRepo(repo);
     }
 
-    const onAddProject = async () => {
+    const onUpdate = async () => {
         try {
             const supabase = createSupabaseBrowserClient();
 
@@ -67,7 +68,7 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
 
     return (
         <div className="w-3xl mx-10 mt-5">
-            <h1 className="text-2xl font-semibold">New Project</h1>
+            <h1 className="text-2xl font-semibold">Edit Project</h1>
 
             <div className="flex flex-col gap-10 mt-10">
                 <div className="grid gap-3">
@@ -115,11 +116,10 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
                     </div>
                 </div>
             </div>
-            <Button className="mt-10 w-50" onClick={onAddProject}>Add Project</Button>
+            <Button className="mt-10 w-50" onClick={onUpdate}>Update</Button>
         </div>
     )
 }
-
 
 function openWindow(url: string) {
     const width = 800;
@@ -141,5 +141,3 @@ function openWindow(url: string) {
         resizable=yes)`
     );
 }
-
-

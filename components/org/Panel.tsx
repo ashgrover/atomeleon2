@@ -265,7 +265,9 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                         </SidebarMenuAction>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start">
-                        <DropdownMenuItem>Edit Project</DropdownMenuItem>
+                        <Link href={`/org/${orgId}/projects/${project.id}/edit-project`}>
+                            <DropdownMenuItem>Edit Project</DropdownMenuItem>
+                        </Link>
                         <DropdownMenuItem variant="destructive"
                             onClick={onToggleDeleteProjectDialog}>Delete Project</DropdownMenuItem>
                     </DropdownMenuContent>
@@ -279,6 +281,7 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                         <DialogHeader>
                             <DialogTitle>Delete Project</DialogTitle>
                         </DialogHeader>
+                        <DialogDescription></DialogDescription>
                         <div className="font-medium">
                             Are you sure you want to delete the project? You cannot undo this action.
                         </div>
