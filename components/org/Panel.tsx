@@ -1,49 +1,48 @@
 "use client";
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { useEffect, useState } from "react";
-import { Calendar, ChevronRight, ChevronsUpDown, Hexagon, Home, Inbox, Plus, Settings, SquareChartGantt } from "lucide-react";
+import { Calendar, ChevronsUpDown, Hexagon, Home, Inbox, MoreHorizontal, Plus, Settings, SquareChartGantt } from "lucide-react";
 import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useState } from "react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+
+type ProjectStatus = "active" | "completed" | "archived";
 
 type Project = {
     id: string,
-    title: string,
-    url: string
-}
-type State = {
-    projects: Array<Project>
+    publicId: string,
+    proj_name: string,
+    proj_desc: string,
+    status: ProjectStatus,
+    budget: number,
+    start_date: Date,
+    end_date: Date,
+    created_at: Date,
+    updated_at: Date,
+    repo_url: string,
+    org_id: string,
+    org_public_id: string,
+    org_integration_id: string,
 }
 
-export default function Panel({ orgId }: { orgId: string }) {
+export default function Panel({ orgId, projects }: { orgId: string, projects: Project[] }) {
     // Menu items.
-
-    const [state, setState] = useState<State>({ projects: [] });
-
-    useEffect(() => {
-        const projects = [
-            {
-                id: "1",
-                title: "Project 1",
-                url: "#"
-            },
-            {
-                id: "2",
-                title: "Project 2",
-                url: "#"
-            },
-            {
-                id: "3",
-                title: "Project 3",
-                url: "#"
-            },
-        ];
-
-        setState(state => ({ ...state, projects: projects }));
-    }, []);
-
 
     return (
         <SidebarProvider>
@@ -143,44 +142,8 @@ export default function Panel({ orgId }: { orgId: string }) {
                                     </Tooltip>
                                 </SidebarMenuItem>
 
-                                {state.projects.map(project => (
-                                    <SidebarMenuItem key={project.id}>
-                                        <Collapsible className="group/collapsible" >
-                                            <SidebarMenuButton asChild className="cursor-pointer">
-                                                <CollapsibleTrigger>
-                                                    <SquareChartGantt />
-                                                    <span className="font-semibold">{project.title}</span>
-                                                    <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
-                                                </CollapsibleTrigger>
-                                            </SidebarMenuButton>
+                                <ProjectSideBarMenuItems orgId={orgId} projects={projects} />
 
-                                            <CollapsibleContent>
-                                                <SidebarMenuSub>
-                                                    <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                                            <Link href={`/org/${orgId}/projects/${project.id}/budget`}>Budget</Link>
-                                                        </SidebarMenuSubButton>
-                                                    </SidebarMenuSubItem>
-                                                    <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                                            <Link href={`/org/${orgId}/projects/${project.id}/members`}>Members</Link>
-                                                        </SidebarMenuSubButton>
-                                                    </SidebarMenuSubItem>
-                                                    <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                                            <Link href={`/org/${orgId}/projects/${project.id}/tasks`}>Tasks</Link>
-                                                        </SidebarMenuSubButton>
-                                                    </SidebarMenuSubItem>
-                                                    <SidebarMenuSubItem>
-                                                        <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                                            <Link href={`/org/${orgId}/projects/${project.id}/performance`}>Performance</Link>
-                                                        </SidebarMenuSubButton>
-                                                    </SidebarMenuSubItem>
-                                                </SidebarMenuSub>
-                                            </CollapsibleContent>
-                                        </Collapsible>
-                                    </SidebarMenuItem>
-                                ))}
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
@@ -204,5 +167,129 @@ export default function Panel({ orgId }: { orgId: string }) {
                 </SidebarFooter>
             </Sidebar>
         </SidebarProvider>
+    )
+}
+
+
+
+function ProjectSideBarMenuItems({ orgId, projects, }: { orgId: string, projects: Project[] }) {
+    const [state, setState] = useState({ projects: [...projects], showDeleteProjectDialog: false });
+
+    const deleteProjectFromList = (projectId: string) => {
+        setState(state => ({
+            ...state,
+            projects: state.projects.filter(proj => proj.id !== projectId)
+        }));
+    }
+
+    return (
+        state.projects.map(project => (
+            <ProjectSideBarMenuItem key={project.id} orgId={orgId} project={project} deleteProjectFromList={deleteProjectFromList} />
+        )))
+}
+
+function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
+    orgId: string,
+    project: Project,
+    deleteProjectFromList: (projectId: string) => void
+}) {
+    const [state, setState] = useState({ showDeleteProjectDialog: false });
+
+    const onToggleDeleteProjectDialog = () => {
+        setState(state => ({ ...state, showDeleteProjectDialog: !state.showDeleteProjectDialog }));
+    }
+
+
+    const onDelete = async (project: Project) => {
+        try {
+            const supabase = createSupabaseBrowserClient();
+
+            const result = await supabase.functions.invoke("delete-project", {
+                body: {
+                    org_id: project.org_id,
+                    proj_id: project.id
+                }
+            });
+
+            if (result.error) throw result.error;
+
+            deleteProjectFromList?.(project.id);
+
+        } catch (err: unknown) {
+            console.log(err instanceof Error ? err.message : err);
+        }
+        onToggleDeleteProjectDialog?.();
+    }
+    return (
+        <div key={project.id}>
+            <SidebarMenuItem className="group/item">
+                <Collapsible className="group/collapsible" >
+                    <SidebarMenuButton asChild className="cursor-pointer">
+                        <CollapsibleTrigger>
+                            <SquareChartGantt />
+                            <span className="font-semibold">{project.proj_name}</span>
+                            {/* <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" /> */}
+                        </CollapsibleTrigger>
+                    </SidebarMenuButton>
+
+                    <CollapsibleContent>
+                        <SidebarMenuSub>
+                            <SidebarMenuSubItem>
+                                <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
+                                    <Link href={`/org/${orgId}/projects/${project.id}/budget`}>Budget</Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                                <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
+                                    <Link href={`/org/${orgId}/projects/${project.id}/members`}>Members</Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                                <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
+                                    <Link href={`/org/${orgId}/projects/${project.id}/tasks`}>Tasks</Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                            <SidebarMenuSubItem>
+                                <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
+                                    <Link href={`/org/${orgId}/projects/${project.id}/performance`}>Performance</Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                        </SidebarMenuSub>
+                    </CollapsibleContent>
+                </Collapsible>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild className="cursor-pointer">
+                        <SidebarMenuAction>
+                            <MoreHorizontal />
+                        </SidebarMenuAction>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="start">
+                        <DropdownMenuItem>Edit Project</DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive"
+                            onClick={onToggleDeleteProjectDialog}>Delete Project</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+            </SidebarMenuItem>
+
+            {state.showDeleteProjectDialog &&
+                <Dialog open={true}>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Delete Project</DialogTitle>
+                        </DialogHeader>
+                        <div className="font-medium">
+                            Are you sure you want to delete the project? You cannot undo this action.
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button variant="outline" onClick={onToggleDeleteProjectDialog}>Cancel</Button>
+                            </DialogClose>
+                            <Button variant="destructive" onClick={() => onDelete(project)}>Delete</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>}
+        </div>
     )
 }

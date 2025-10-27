@@ -5,6 +5,7 @@ export type OrgType = typeof ORG_TYPES[number];
 
 export type Project = {
     id: string,
+    public_id: string,
     orgId: string,
     title: string,
     description?: string,

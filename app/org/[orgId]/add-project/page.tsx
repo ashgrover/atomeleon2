@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getInstallationId, saveRepo } from "@/lib/database";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { use, useEffect, useState } from "react";
 
 type Repo = {
@@ -24,8 +25,8 @@ type RepoState = {
 };
 
 export default function AddProjectPage({ params }: { params: Promise<{ orgId: string }> }) {
-    console.log("AddProjectPage")
     const { orgId } = use(params);
+    const router = useRouter();
 
     const [formState, setFormState] = useState<FormState>({ projName: "", projDesc: "", budget: 0 });
     const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null });
@@ -69,6 +70,7 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
     const onAddProject = async () => {
         try {
             const supabase = createSupabaseBrowserClient();
+
             const result = await supabase.functions.invoke("create-project", {
                 body: {
                     org_public_id: orgId,
@@ -79,8 +81,10 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
             });
 
             if (result.error) throw result.error;
+            window.location.reload();
+
         } catch (err: unknown) {
-            console.log(err instanceof Error ? err.message : "");
+            console.log(err instanceof Error ? err.message : err);
         }
     }
 

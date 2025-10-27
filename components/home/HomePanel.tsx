@@ -14,7 +14,7 @@ export default function HomePanel() {
     const onLogout = async () => {
         const supabase = createSupabaseBrowserClient();
         const { error } = await supabase.auth.signOut();
-        router.push("/");
+        router.push("/login");
     }
 
     return (

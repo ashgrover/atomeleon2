@@ -29,7 +29,6 @@ export default function LoginPage() {
         catch (error: unknown) {
             setError(error instanceof Error ? error.message : "An error occurred");
         }
-        setLoading(false);
     }
 
     return (

@@ -247,12 +247,7 @@ begin
 end;
 $$;
 
--- User-Orgs View
-create or replace view user_orgs_view with(security_invoker=true) as
-  select o.id, o.public_id, o.org_name, o.org_type
-  from organizations o
-  join user_organizations u on o.id = u.organization_id
-  where u.user_id = auth.uid();
+
 
 -- Create Project function
 create or replace function create_project (
@@ -260,12 +255,14 @@ org_public_id text,
 public_id text,
 proj_name text,
 proj_desc text,
-budget decimal)
-
+budget decimal
+)
 returns boolean
 language plpgsql
+security definer
 set search_path = ''
 as $$
+
 declare
   org_id uuid;
   proj_id uuid; 
@@ -276,6 +273,15 @@ begin
   
   if org_id is null then
     raise exception 'Invalid organization: %', public_id;
+  end if;
+
+  if org_id not in (
+    select organization_id
+    from public.user_organizations
+    where user_id = auth.uid()
+    and role in ('admin', 'pm')
+    ) then
+     raise exception 'Invalid org member: %', public_id;
   end if;
 
   insert into public.projects(public_id, organization_id, proj_name, proj_desc, budget)
@@ -293,6 +299,137 @@ begin
 end;
 $$;
 
+create or replace function delete_project (
+org_id uuid,
+proj_id uuid
+)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+
+declare
+deleted_id uuid;
+
+begin
+    if not exists(
+        select 1 
+        from public.user_organizations
+        where user_id = auth.uid()
+        and organization_id = org_id
+        and role in ('admin', 'pm')
+    ) then
+        raise exception 'Invalid org member: %', auth.uid();
+    end if;
+
+    if not exists(
+        select 1
+        from public.user_projects
+        where user_id = auth.uid()
+        and project_id = proj_id
+    ) then
+        raise exception 'Invalid project member: %', auth.uid();
+    end if;
+
+    delete from public.projects 
+    where id = proj_id
+    returning id into deleted_id;
+
+    if deleted_id is null then
+        raise exception 'Delete failed for project id: %', proj_id;
+    end if;
+
+    return true;
+
+    exception
+        when others then
+            raise exception 'Error: %', sqlerrm;
+            return false;
+end;
+$$;
+
+------- User Views ------------
+create or replace view user_orgs_view with(security_invoker=true) as
+  select o.id, o.public_id, o.org_name, o.org_type
+  from organizations o
+  join user_organizations u on o.id = u.organization_id
+  where u.user_id = auth.uid();
+
+-- User-projects view
+create or replace view user_projects_view with(security_invoker=true) as
+    select 
+        o.public_id as org_publid_id,
+        o.id as org_id,
+        p.id, 
+        p.public_id,
+        p.proj_name,
+        p.proj_desc,
+        p.status,
+        p.budget,
+        p.start_date,
+        p.end_date,
+        p.created_at,
+        p.updated_at,
+        p.repo_url,
+        p.org_integration_id
+    from projects p
+    join organizations o on p.organization_id = o.id;
+
+
+-------- User policies ----------
+create policy "user can access their projects"
+on projects
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from user_projects up
+    where up.project_id = projects.id
+    and up.user_id = auth.uid()
+  )
+);
+
+create policy "user can access their projects"
+on user_projects
+using (auth.uid() = user_projects.user_id);
+
+
+create policy "user can create project"
+on projects
+for insert
+to authenticated
+with check (
+ organization_id in (
+  select organization_id 
+  from user_organizations
+  where user_id = auth.uid()
+  and role in ('admin', 'pm')
+ )
+);
+
+create policy "user can delete projects"
+on "public"."projects"
+as permissive
+for delete
+to authenticated
+using (
+     exists (
+        select 1 
+        from public.user_organizations
+        where user_id = auth.uid()
+        and organization_id = projects.organization_id
+        and role in ('admin', 'pm')
+    )
+    and
+    exists (
+        select 1
+        from public.user_projects
+        where user_id = auth.uid()
+        and project_id = projects.id
+    )
+)
 
 
 -- For later
