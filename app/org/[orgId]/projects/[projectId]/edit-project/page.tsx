@@ -24,8 +24,8 @@ type RepoState = {
     selectedRepo: Repo | null,
 };
 
-export default function EditProjectPage({ params }: { params: Promise<{ orgId: string }> }) {
-    const { orgId } = use(params);
+export default function EditProjectPage({ params }: { params: Promise<{ orgId: string, projectId: string }> }) {
+    const { orgId, projectId } = use(params);
     const [formState, setFormState] = useState<FormState>({ projName: "", projDesc: "", budget: 0 });
     const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null });
 
@@ -49,9 +49,9 @@ export default function EditProjectPage({ params }: { params: Promise<{ orgId: s
         try {
             const supabase = createSupabaseBrowserClient();
 
-            const result = await supabase.functions.invoke("create-project", {
+            const result = await supabase.functions.invoke("update-project", {
                 body: {
-                    org_public_id: orgId,
+                    proj_public_id: projectId,
                     proj_name: formState.projName,
                     proj_desc: formState.projDesc,
                     budget: formState.budget

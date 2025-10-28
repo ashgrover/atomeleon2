@@ -26,7 +26,7 @@ type ProjectStatus = "active" | "completed" | "archived";
 
 type Project = {
     id: string,
-    publicId: string,
+    public_id: string,
     proj_name: string,
     proj_desc: string,
     status: ProjectStatus,
@@ -43,7 +43,6 @@ type Project = {
 
 export default function Panel({ orgId, projects }: { orgId: string, projects: Project[] }) {
     // Menu items.
-
     return (
         <SidebarProvider>
             <Sidebar collapsible="icon">
@@ -236,22 +235,22 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                         <SidebarMenuSub>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                    <Link href={`/org/${orgId}/projects/${project.id}/budget`}>Budget</Link>
+                                    <Link href={`/org/${orgId}/projects/${project.public_id}/budget`}>Budget</Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                    <Link href={`/org/${orgId}/projects/${project.id}/members`}>Members</Link>
+                                    <Link href={`/org/${orgId}/projects/${project.public_id}/members`}>Members</Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                    <Link href={`/org/${orgId}/projects/${project.id}/tasks`}>Tasks</Link>
+                                    <Link href={`/org/${orgId}/projects/${project.public_id}/tasks`}>Tasks</Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                    <Link href={`/org/${orgId}/projects/${project.id}/performance`}>Performance</Link>
+                                    <Link href={`/org/${orgId}/projects/${project.public_id}/performance`}>Performance</Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                         </SidebarMenuSub>
@@ -265,7 +264,7 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                         </SidebarMenuAction>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start">
-                        <Link href={`/org/${orgId}/projects/${project.id}/edit-project`}>
+                        <Link href={`/org/${orgId}/projects/${project.public_id}/edit-project`}>
                             <DropdownMenuItem>Edit Project</DropdownMenuItem>
                         </Link>
                         <DropdownMenuItem variant="destructive"

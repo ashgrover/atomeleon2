@@ -5,7 +5,6 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "supabase-edge-runtime";
 import { createClient } from "supabase-js@2";
-import { customAlphabet } from "nanoid";
 
 export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -18,12 +17,8 @@ Deno.serve(async (req) => {
     }
 
     try {
-        const { org_public_id, proj_name, proj_desc, budget } = await req.json();
-        if (!org_public_id || !proj_name || !proj_desc || !budget) throw new Error("Fields are empty!");
-
-        const alphanumericAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        const nanoid = customAlphabet(alphanumericAlphabet, 12);
-        const public_id = nanoid();
+        const { proj_public_id, proj_name, proj_desc, budget } = await req.json();
+        if (!proj_public_id || !proj_name || !proj_desc || !budget) throw new Error("Fields are empty!");
 
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
@@ -35,12 +30,11 @@ Deno.serve(async (req) => {
             }
         );
 
-        const result = await supabase.rpc("create_project", {
-            org_public_id,
-            public_id,
-            proj_name,
-            proj_desc,
-            budget
+        const result = await supabase.rpc("update_project", {
+            proj_public_id,
+            new_proj_name: proj_name,
+            new_proj_desc: proj_desc,
+            new_budget: budget
         });
 
         console.log("Data", result.data);

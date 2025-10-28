@@ -221,10 +221,10 @@ $$;
 
 -- Create Org function
 create or replace function create_org (
-public_id text,
-org_name text, 
-org_type org_type)
-
+    public_id text,
+    org_name text, 
+    org_type org_type
+)
 returns boolean
 language plpgsql
 set search_path = ''
@@ -251,102 +251,161 @@ $$;
 
 -- Create Project function
 create or replace function create_project (
-org_public_id text,
-public_id text,
-proj_name text,
-proj_desc text,
-budget decimal
+    org_public_id text,
+    public_id text,
+    proj_name text,
+    proj_desc text,
+    budget decimal
 )
 returns boolean
 language plpgsql
 security definer
 set search_path = ''
 as $$
+    declare
+    org_id uuid;
+    proj_id uuid; 
 
-declare
-  org_id uuid;
-  proj_id uuid; 
-begin
-  select id into org_id 
-  from public.organizations org 
-  where org.public_id = org_public_id;
-  
-  if org_id is null then
-    raise exception 'Invalid organization: %', public_id;
-  end if;
+    begin
+    select id into org_id 
+    from public.organizations org 
+    where org.public_id = org_public_id;
+    
+    if org_id is null then
+        raise exception 'Invalid organization: %', public_id;
+    end if;
 
-  if org_id not in (
-    select organization_id
-    from public.user_organizations
-    where user_id = auth.uid()
-    and role in ('admin', 'pm')
-    ) then
-     raise exception 'Invalid org member: %', public_id;
-  end if;
+    if org_id not in (
+        select organization_id
+        from public.user_organizations
+        where user_id = auth.uid()
+        and role in ('admin', 'pm')
+        ) then
+        raise exception 'Invalid org member: %', public_id;
+    end if;
 
-  insert into public.projects(public_id, organization_id, proj_name, proj_desc, budget)
-  values (public_id, org_id, proj_name, proj_desc, budget)
-  returning id into proj_id;
+    insert into public.projects(public_id, organization_id, proj_name, proj_desc, budget)
+    values (public_id, org_id, proj_name, proj_desc, budget)
+    returning id into proj_id;
 
-  insert into public.user_projects(user_id, project_id)
-  values(auth.uid(), proj_id);
-  return true;
+    insert into public.user_projects(user_id, project_id)
+    values(auth.uid(), proj_id);
+    return true;
 
-  exception
-    when others then
-      raise exception 'Insert failed: %', sqlerrm;
-      return false;
-end;
+    exception
+        when others then
+        raise exception 'Insert failed: %', sqlerrm;
+        return false;
+    end;
 $$;
 
-create or replace function delete_project (
-org_id uuid,
-proj_id uuid
+create or replace function can_user_edit_project(
+    proj_id uuid
+)
+returns boolean
+language plpgsql
+set search_path = ''
+as $$
+    begin
+        return exists(
+            select 1
+            from public.projects p
+            where p.id = proj_id
+            and exists(
+                select 1
+                from public.user_organizations uo
+                where uo.organization_id = p.organization_id
+                and uo.user_id = auth.uid()
+                and uo.role in ('admin', 'pm')
+            )
+            and exists(
+                select 1
+                from public.user_projects up
+                where up.project_id = p.id
+                and up.user_id = auth.uid()
+            )
+        );
+    end;
+$$;
+
+
+create or replace function update_project(
+    proj_public_id text,
+    new_proj_name text,
+    new_proj_desc text,
+    new_budget decimal
 )
 returns boolean
 language plpgsql
 security invoker
 set search_path = ''
 as $$
+    declare
+    proj_id uuid;
 
-declare
-deleted_id uuid;
+    begin
+        select id into proj_id 
+        from public.projects 
+        where public_id = proj_public_id;
 
-begin
-    if not exists(
-        select 1 
-        from public.user_organizations
-        where user_id = auth.uid()
-        and organization_id = org_id
-        and role in ('admin', 'pm')
-    ) then
-        raise exception 'Invalid org member: %', auth.uid();
-    end if;
+        if not public.can_user_edit_project(proj_id) then
+            raise exception 'Invalid org member: %', auth.uid(); 
+        end if;
 
-    if not exists(
-        select 1
-        from public.user_projects
-        where user_id = auth.uid()
-        and project_id = proj_id
-    ) then
-        raise exception 'Invalid project member: %', auth.uid();
-    end if;
+        update public.projects
+        set
+            proj_name = new_proj_name,
+            proj_desc = new_proj_desc,
+            budget = new_budget
+        where id = proj_id;
 
-    delete from public.projects 
-    where id = proj_id
-    returning id into deleted_id;
+        if not found then
+            raise exception 'Update failed: not authorized or project not found';
+        end if;
 
-    if deleted_id is null then
-        raise exception 'Delete failed for project id: %', proj_id;
-    end if;
+        return true;
 
-    return true;
+        exception
+            when others then
+                raise exception 'Error: %', sqlerrm;
+                return false;
+    end;
+$$;
 
-    exception
-        when others then
-            raise exception 'Error: %', sqlerrm;
-            return false;
-end;
+
+
+create or replace function delete_project (
+    org_id uuid,
+    proj_id uuid
+)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+    declare
+    deleted_id uuid;
+
+    begin
+        if not public.can_user_edit_project(proj_id) then
+        raise exception 'Invalid org member: %', auth.uid(); 
+        end if; 
+
+        delete from public.projects 
+        where id = proj_id
+        returning id into deleted_id;
+
+        if deleted_id is null then
+            raise exception 'Delete failed for project id: %', proj_id;
+        end if;
+
+        return true;
+
+        exception
+            when others then
+                raise exception 'Error: %', sqlerrm;
+                return false;
+    end;
 $$;
 
 ------- User Views ------------
@@ -408,6 +467,14 @@ with check (
   and role in ('admin', 'pm')
  )
 );
+
+create policy "user can edit projects"
+on projects
+as permissive
+for update
+to authenticated
+using (can_user_edit_project(projects.id))
+with check (can_user_edit_project(projects.id))
 
 create policy "user can delete projects"
 on "public"."projects"
