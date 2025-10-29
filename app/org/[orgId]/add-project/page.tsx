@@ -29,8 +29,28 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
     const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null });
 
     useEffect(() => {
+        async function getRepos() {
+            const installationId = getInstallationId();
+            if (!installationId) return;
 
-        // getRepos();
+            const response = await fetch("/org/addproject/api", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    installationId
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                setRepoState(state => ({ ...state, repos: result.data }))
+            }
+            console.log("GetRepos", result);
+        }
+
+        getRepos();
     }, []);
 
 
