@@ -48,8 +48,8 @@ export default function CreateOrganizationPage() {
     }
 
     return (
-        <div className="w-full flex justify-center bg-slate-50">
-            <div className="m-8 w-full h-fit max-w-3xl space-y-6 border-1 rounded-2xl bg-white p-8">
+        <div className="w-full flex justify-center bg-slate-50 p-8">
+            <div className="w-full h-fit max-w-3xl space-y-6 border-1 rounded-2xl bg-white p-8">
                 <div>
                     <h2 className="text-2xl font-semibold text-gray-900">
                         Create Organization
