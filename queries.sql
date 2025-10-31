@@ -17,7 +17,7 @@ CREATE TABLE organizations (
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TYPE integration_type AS ENUM (
+CREATE TYPE data_provider AS ENUM (
     'none',
     'github',
     'jira',
@@ -28,9 +28,10 @@ CREATE TYPE integration_type AS ENUM (
 CREATE TABLE organizations_integrations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    integration_type integration_type NOT NULL DEFAULT 'none',
+    data_provider data_provider NOT NULL DEFAULT 'none',
     external_installation_id TEXT,                -- GitHub installation ID (unique per org)
-    metadata JSONB DEFAULT '{}'::JSONB,  -- any provider-specific details
+    metadata jsonb default '{}'::jsonb,
+    connected_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -61,9 +62,21 @@ CREATE TABLE projects (
     end_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
-    repo_url TEXT,
-    org_integration_id UUID REFERENCES organizations_integrations(id) ON DELETE SET NULL
 );
+
+CREATE TABLE project_integrations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
+    org_integration_id UUID NOT NULL REFERENCES organizations_integrations(id) ON DELETE CASCADE,
+    project_id UUID NOT NULL REFERENCES organizations_integrations(id) ON DELETE CASCADE,
+    external_resource_name TEXT,
+    external_resource_id TEXT,
+    external_resource_url TEXT,
+    metadata jsonb default '{}'::jsonb,
+    connected_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    unique (project_id, org_integration_id)
+)
 
 
 CREATE TABLE user_projects (

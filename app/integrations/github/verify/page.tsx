@@ -5,7 +5,7 @@ import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.share
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
-export default function VerifyInstallationId() {
+export default function VerifyGithubIntegrationPage() {
     const searchParams = useSearchParams()
     const router = useRouter();
     const installationId = searchParams.get("installation_id");
