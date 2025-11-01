@@ -27,7 +27,7 @@ type RepoState = {
 export default function AddProjectPage({ params }: { params: Promise<{ orgId: string }> }) {
     const { orgId } = use(params);
     const [formState, setFormState] = useState<FormState>({ projName: "", projDesc: "", budget: 0 });
-    const [showIntegrationsState, setShowIntegrationsState] = useState(false);
+    const [showIntegrationsState, setShowIntegrationsState] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
 
     const onAddProject = async (e: FormEvent) => {
@@ -63,7 +63,7 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
 
     return (
         <div className="bg-slate-50 flex w-full justify-center">
-            <div className="m-8 border-1 rounded-2xl bg-white sm:min-w-3xl max-w-3xl h-fit">
+            <div className="m-8 border-1 rounded-2xl bg-white sm:min-w-3xl h-fit">
                 <form onSubmit={onAddProject} className="[&>*]:border-b-1 [&>*]:border-gray-200 [&>*]:px-8 [&>*]:py-6">
                     <div>
                         <h1 className="text-2xl font-semibold">Add Project</h1>
@@ -105,34 +105,48 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
 function ConnectIntegrations({ orgId }: { orgId: string }) {
     const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null });
 
+    // useEffect(() => {
+    //     async function getRepos() {
+    //         const installationId = getInstallationId();
+    //         if (!installationId) return;
+
+    //         const response = await fetch("/org/addproject/api", {
+    //             method: "POST",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //             },
+    //             body: JSON.stringify({
+    //                 installationId
+    //             })
+    //         });
+
+    //         const result = await response.json();
+    //         if (result.success) {
+    //             setRepoState(state => ({ ...state, repos: result.data }))
+    //         }
+    //         console.log("GetRepos", result);
+    //     }
+
+    //     getRepos();
+    // }, []);
+
     useEffect(() => {
-        async function getRepos() {
-            const installationId = getInstallationId();
-            if (!installationId) return;
+        window.addEventListener("message", async (e: MessageEvent) => {
+            if (e.origin !== "http://localhost:3000") throw Error("Invalid request");
 
-            const response = await fetch("/org/addproject/api", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    installationId
-                })
-            });
+            try {
+                const { installation_id, user_code } = e.data;
+                const isVerified = await verifyGithubInstallation(orgId, installation_id, user_code);
 
-            const result = await response.json();
-            if (result.success) {
-                setRepoState(state => ({ ...state, repos: result.data }))
+            } catch (err) {
+                console.log(err instanceof Error ? err.message : err);
             }
-            console.log("GetRepos", result);
-        }
-
-        getRepos();
+        });
     }, []);
 
-    const openGithub = () => {
-        const url = "https://github.com/apps/someorgapp/installations/new";
-        openWindow(url);
+    const openGithubWindow = () => {
+        const githubAppUrl = "https://github.com/apps/someorgapp/installations/new";
+        openWindow(githubAppUrl);
     }
 
     const onSelectRepository = (repo: Repo) => {
@@ -151,21 +165,21 @@ function ConnectIntegrations({ orgId }: { orgId: string }) {
 
     return (
         <div className="bg-slate-50 w-full flex justify-center">
-            <div className=" m-8 border-1 rounded-2xl bg-white sm:min-w-2xl max-w-3xl h-fit 
+            <div className=" m-8 border-1 rounded-2xl bg-white sm:min-w-2xl max-w-4xl h-fit 
             [&>*]:border-b-1 [&>*]:border-gray-200 [&>*]:px-8 [&>*]:py-6">
                 <div>
                     <h2 className="text-2xl font-semibold">Connect Data Providers</h2>
                     <p className="text-gray-500 text-sm">Integrate with issue tracking tools and code repositories</p>
                 </div>
-                <div className="grid gap-3">
-                    <Label>Connect Issue Tracking Tool</Label>
+                <div className="grid gap-8">
+                    <Label className="font-semibold">Connect Issue Tracking Tool</Label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <Button variant="secondary">Jira</Button>
                         <Button variant="secondary">Azure Boards</Button>
                     </div>
                 </div>
-                <div className="grid gap-3">
-                    <Label>Connect Repository</Label>
+                <div className="grid gap-8">
+                    <Label className="font-semibold">Connect Repository</Label>
                     <div className={`${repoState.repos.length ? "" : "hidden"}`}>
                         <p className="text-sm text-gray-500 font-medium my-2">Available Repositories</p>
                         <div className="border-1 rounded-lg p-3 flex flex-col divide-y">
@@ -177,7 +191,7 @@ function ConnectIntegrations({ orgId }: { orgId: string }) {
                         </div>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <Button variant="secondary" onClick={openGithub}>GitHub (repo & issues)</Button>
+                        <Button variant="secondary" onClick={openGithubWindow}>GitHub (Repo & Issues)</Button>
                         <Button variant="secondary">Bitbucket</Button>
                         <Button variant="secondary">Azure Repos</Button>
                     </div>
@@ -191,8 +205,17 @@ function ConnectIntegrations({ orgId }: { orgId: string }) {
     )
 }
 
+async function verifyGithubInstallation(orgId: string, installationId: string, userCode: string): Promise<boolean> {
+    const supabase = createSupabaseBrowserClient();
+    const result = await supabase.functions.invoke("verify-github", {
+        body: { org_public_id: orgId, installation_id: installationId, user_code: userCode }
+    });
 
+    if (result.error) throw result.error;
+    if (!result.response?.ok) throw Error("Something went wrong! Please try again later.");
 
+    return true;
+}
 
 function openWindow(url: string) {
     const width = 800;

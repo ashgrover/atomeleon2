@@ -285,7 +285,7 @@ as $$
     where org.public_id = org_public_id;
     
     if org_id is null then
-        raise exception 'Invalid organization: %', public_id;
+        raise exception 'Invalid organization: %', org_id;
     end if;
 
     if org_id not in (
@@ -294,7 +294,7 @@ as $$
         where user_id = auth.uid()
         and role in ('admin', 'pm')
         ) then
-        raise exception 'Invalid org member: %', public_id;
+        raise exception 'Invalid org member: %', auth.uid();
     end if;
 
     insert into public.projects(public_id, organization_id, proj_name, proj_desc, budget)
@@ -418,6 +418,59 @@ as $$
             when others then
                 raise exception 'Error: %', sqlerrm;
                 return false;
+    end;
+$$;
+
+create or replace function create_github_integration (
+    installation_id text,
+    org_publid_id text,
+    -- org_integration_id uuid
+)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+    declare
+        org_id uuid;
+        org_integ_id uuid;
+    begin
+    if installation_id is null or org_publid_id is null then
+        raise exception 'Invalid installation id: %', installation_id;
+    end if;
+
+    if  org_publid_id is null then
+        raise exception 'Invalid org id: %', org_publid_id;
+    end if;
+
+    select id into org_id
+    from public.organizations org
+    where org.public_id = org_publid_id;
+
+    if not exists (
+        select 1 from public.user_organizations
+        where organization_id = org_id
+        and user_id = auth.uid()
+        and role in ('admin', 'pm')
+    ) then
+        raise exception 'User not allowed: %', auth.uid();
+    end if;
+
+    if org_integration_id is null then
+        insert into public.organizations_integrations(
+            organization_id, 
+            data_provider, 
+            external_installation_id, 
+            connected_by
+        ) values(
+            org_id, 'github', installation_id, auth.uid()
+        ) return id into org_integ_id;
+    end if;
+
+    exception
+        when others then
+        raise exception 'Insert failed: %', sqlerrm;
+        return false;
     end;
 $$;
 

@@ -3,30 +3,100 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import "supabase-edge-runtime";
+import { createClient } from "supabase-js@2";
+import { corsHeaders, enableCors } from "../../util.ts";
 
-console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
-  }
+    enableCors(req);
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})
+    try {
+        const { org_public_id, installation_id, user_code } = await req.json();
+        if (!org_public_id || !installation_id || !user_code) throw Error("Invalid fields!");
 
-/* To invoke locally:
+        const userAccessToken = await getUserAccessToken(user_code);
+        const isInstallationIdVerified = await checkUserInstallation(installation_id, userAccessToken);
 
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
+        if (isInstallationIdVerified) {
+            const authHeader = req.headers.get("Authorization")!;
+            await storeGithubAppInstallationIdInDB(authHeader, installation_id, org_public_id, null);
+        }
 
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/verify-github' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
+        return new Response(JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+        )
 
-*/
+    } catch (err) {
+        console.error(err);
+        return new Response(String(err instanceof Error ? err?.message : err), { status: 500 });
+    }
+});
+
+async function getUserAccessToken(userCode: string) {
+    if (!userCode) throw Error("Invalid user code!");
+
+    const clientId = Deno.env.get("GITHUB_APP_CLIENT_ID");
+    const clientSecret = Deno.env.get("GITHUB_APP_CLIENT_SECRET");
+    const githubAcessTokenUrl = "https://github.com/login/oauth/access_token";
+
+    const response = await fetch(githubAcessTokenUrl, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        body: JSON.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            code: userCode
+        })
+    });
+
+    if (!response.ok) throw Error("Something went wrong! Please try again");
+
+    const data = await response.json();
+    const userAccessToken = data.access_token;
+    console.log("DATA", data, "status", response.status, response.ok)
+    return userAccessToken;
+}
+
+
+async function checkUserInstallation(installationId: string, userAccessToken: string) {
+    const installationsAPIUrl = "https://api.github.com/user/installations"
+    const response = await fetch(installationsAPIUrl, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": `Bearer ${userAccessToken}`,
+            "X-GitHub-Api-Version": "2022-11-28"
+        }
+    });
+
+    const result = await response.json();
+    if (result?.total_count <= 0) return false;
+
+    const hasInstallation = result.installations.some((installation: { id: number; }) => String(installation.id) === installationId);
+    return hasInstallation;
+}
+
+async function storeGithubAppInstallationIdInDB(authHeader: string, installationId: string, orgPublicId: string, orgIntegrationId: string | null) {
+    const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? "",
+        {
+            global: {
+                headers: { Authorization: authHeader }
+            }
+        }
+    );
+
+    const result = await supabase.rpc("create_github_integration", {
+        installation_id: installationId,
+        org_public_id: orgPublicId,
+        org_integration_id: orgIntegrationId
+    });
+
+    if (result.error) throw result.error;
+}
