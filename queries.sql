@@ -566,6 +566,19 @@ create or replace view user_projects_view with(security_invoker=true) as
     from projects p
     join organizations o on p.organization_id = o.id;
 
+create or replace view project_details_view with(security_invoker=true) as
+    select 
+        public_id as proj_public_id,
+        proj_name,
+        proj_desc,
+        status,
+        budget,
+        start_date,
+        end_date,
+        created_at,
+        updated_at,
+        repo_url
+    from projects;
 
 -------- User policies ----------
 create policy "user can access their projects"

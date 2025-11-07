@@ -264,8 +264,8 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                         </SidebarMenuAction>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start">
-                        <Link href={`/org/${orgId}/projects/${project.public_id}/edit-project`}>
-                            <DropdownMenuItem>Edit Project</DropdownMenuItem>
+                        <Link href={`/org/${orgId}/projects/${project.public_id}/project-settings`}>
+                            <DropdownMenuItem>Settings</DropdownMenuItem>
                         </Link>
                         <DropdownMenuItem variant="destructive"
                             onClick={onToggleDeleteProjectDialog}>Delete Project</DropdownMenuItem>

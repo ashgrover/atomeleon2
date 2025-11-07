@@ -15,7 +15,7 @@ export default async function OrgLayout({ children, params }: { children: React.
             .from("user_projects_view")
             .select("*")
             .eq("org_publid_id", orgId);
-        
+
         projects = result;
 
         if (error) throw error;
