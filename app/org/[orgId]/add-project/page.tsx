@@ -4,15 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { getInstallationId, saveRepo } from "@/lib/database";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 import { FormEvent, use, useEffect, useState } from "react";
 
-type Repo = {
+type Repository = {
     id: number,
-    name: string,
-    fullName: string
+    nodeId: string,
+    owner: string,
+    fullName: string,
+    repoUrl: string
 }
 type FormState = {
     projName: string,
@@ -20,14 +21,14 @@ type FormState = {
     budget: number,
 }
 type RepoState = {
-    repos: Repo[],
-    selectedRepo: Repo | null,
+    repos: Repository[],
+    selectedRepo: Repository | null,
 };
 
 export default function AddProjectPage({ params }: { params: Promise<{ orgId: string }> }) {
     const { orgId } = use(params);
     const [formState, setFormState] = useState<FormState>({ projName: "", projDesc: "", budget: 0 });
-    const [showIntegrationsState, setShowIntegrationsState] = useState(true);
+    const [dataProviderViewState, setDataProviderViewState] = useState({ show: false, projectId: "" });
     const [isLoading, setIsLoading] = useState(false);
 
     const onAddProject = async (e: FormEvent) => {
@@ -38,7 +39,7 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
             setIsLoading(true);
             const supabase = createSupabaseBrowserClient();
 
-            const result = await supabase.functions.invoke("create-project", {
+            const { data, error } = await supabase.functions.invoke("create-project", {
                 body: {
                     org_public_id: orgId,
                     proj_name: formState.projName,
@@ -47,9 +48,11 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
                 }
             });
 
-            if (result.error) throw result.error;
+            if (error) throw error;
+            const { project_id } = data;
+            console.log(project_id, "==", data)
 
-            setShowIntegrationsState(true);
+            setDataProviderViewState({ show: true, projectId: project_id });
 
         } catch (err: unknown) {
             console.log(err instanceof Error ? err.message : err);
@@ -57,8 +60,9 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
 
         setIsLoading(false);
     }
-    if (showIntegrationsState) {
-        return <ConnectIntegrations orgId={orgId} />
+    
+    if (dataProviderViewState.show && dataProviderViewState.projectId) {
+        return <ConnectIntegrations orgId={orgId} projectId={dataProviderViewState.projectId} />
     }
 
     return (
@@ -102,56 +106,40 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
     )
 }
 
-function ConnectIntegrations({ orgId }: { orgId: string }) {
+function ConnectIntegrations({ orgId, projectId }: { orgId: string, projectId: string }) {
     const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null });
 
-    // useEffect(() => {
-    //     async function getRepos() {
-    //         const installationId = getInstallationId();
-    //         if (!installationId) return;
-
-    //         const response = await fetch("/org/addproject/api", {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify({
-    //                 installationId
-    //             })
-    //         });
-
-    //         const result = await response.json();
-    //         if (result.success) {
-    //             setRepoState(state => ({ ...state, repos: result.data }))
-    //         }
-    //         console.log("GetRepos", result);
-    //     }
-
-    //     getRepos();
-    // }, []);
-
     useEffect(() => {
-        window.addEventListener("message", async (e: MessageEvent) => {
+        window.onmessage = async (e: MessageEvent) => {
             if (e.origin !== "http://localhost:3000") throw Error("Invalid request");
-
             try {
                 const { installation_id, user_code } = e.data;
                 const isVerified = await verifyGithubInstallation(orgId, installation_id, user_code);
-
+                if (isVerified) {
+                    const repos = await getGithubRepos(orgId);
+                    setRepoState(state => ({ ...state, repos: repos }));
+                }
             } catch (err) {
                 console.log(err instanceof Error ? err.message : err);
             }
-        });
-    }, []);
+        };
+        
+        async function getRepos() {
+            const repos = await getGithubRepos(orgId);
+            setRepoState(state => ({ ...state, repos: repos }));
+        }
+
+        getRepos();
+    }, [orgId]);
 
     const openGithubWindow = () => {
         const githubAppUrl = "https://github.com/apps/someorgapp/installations/new";
         openWindow(githubAppUrl);
     }
 
-    const onSelectRepository = (repo: Repo) => {
+    const onSelectRepository = (repo: Repository) => {
         setRepoState(state => ({ ...state, selectedRepo: repo }));
-        saveRepo(repo);
+        // TODO: save selected repo;
     }
 
     const onSkip = () => {
@@ -215,6 +203,30 @@ async function verifyGithubInstallation(orgId: string, installationId: string, u
     if (!result.response?.ok) throw Error("Something went wrong! Please try again later.");
 
     return true;
+}
+
+async function getGithubRepos(orgId: string) {
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.functions.invoke("fetch-github-repos", {
+        body: { org_public_id: orgId }
+    });
+    if (error) throw error;
+    const { installation_repos }: { installation_repos: [] } = data;
+
+    const repos: Repository[] = [];
+    installation_repos.forEach((installation: any) => {
+        installation.repos.forEach(repo => {
+            repos.push({
+                id: repo.id,
+                nodeId: repo.node_id,
+                owner: repo.owner,
+                fullName: repo.full_name,
+                repoUrl: repo.repo_url
+            })
+        });
+    });
+
+    return repos;
 }
 
 function openWindow(url: string) {

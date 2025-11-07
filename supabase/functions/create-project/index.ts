@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
             }
         );
 
-        const result = await supabase.rpc("create_project", {
+        const { data, error } = await supabase.rpc("create_project", {
             org_public_id,
             public_id,
             proj_name,
@@ -43,11 +43,11 @@ Deno.serve(async (req) => {
             budget
         });
 
-        console.log("Data", result.data);
+        console.log("Data", data);
 
-        if (result.error) throw result.error;
+        if (error) throw error;
 
-        return new Response(JSON.stringify({ success: true }), {
+        return Response.json({ success: true, project_id: data }, {
             headers: { ...corsHeaders }, status: 200
         });
 

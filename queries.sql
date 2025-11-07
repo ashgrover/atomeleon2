@@ -270,7 +270,7 @@ create or replace function create_project (
     proj_desc text,
     budget decimal
 )
-returns boolean
+returns text
 language plpgsql
 security definer
 set search_path = ''
@@ -303,12 +303,13 @@ as $$
 
     insert into public.user_projects(user_id, project_id)
     values(auth.uid(), proj_id);
-    return true;
+
+    return proj_id;
 
     exception
         when others then
         raise exception 'Insert failed: %', sqlerrm;
-        return false;
+        return null;
     end;
 $$;
 
@@ -423,8 +424,7 @@ $$;
 
 create or replace function create_github_integration (
     installation_id text,
-    org_publid_id text,
-    -- org_integration_id uuid
+    org_public_id text
 )
 returns boolean
 language plpgsql
@@ -433,19 +433,18 @@ set search_path = ''
 as $$
     declare
         org_id uuid;
-        org_integ_id uuid;
     begin
-    if installation_id is null or org_publid_id is null then
+    if installation_id is null then
         raise exception 'Invalid installation id: %', installation_id;
     end if;
 
-    if  org_publid_id is null then
-        raise exception 'Invalid org id: %', org_publid_id;
+    if  org_public_id is null then
+        raise exception 'Invalid org id: %', org_public_id;
     end if;
 
     select id into org_id
     from public.organizations org
-    where org.public_id = org_publid_id;
+    where org.public_id = org_public_id;
 
     if not exists (
         select 1 from public.user_organizations
@@ -456,16 +455,16 @@ as $$
         raise exception 'User not allowed: %', auth.uid();
     end if;
 
-    if org_integration_id is null then
-        insert into public.organizations_integrations(
-            organization_id, 
-            data_provider, 
-            external_installation_id, 
-            connected_by
-        ) values(
-            org_id, 'github', installation_id, auth.uid()
-        ) return id into org_integ_id;
-    end if;
+    insert into public.organizations_integrations(
+        organization_id, 
+        data_provider, 
+        external_installation_id, 
+        connected_by
+    ) values(
+        org_id, 'github', installation_id, auth.uid()
+    );
+
+    return true;
 
     exception
         when others then
@@ -476,10 +475,18 @@ $$;
 
 ------- User Views ------------
 create or replace view user_orgs_view with(security_invoker=true) as
-  select o.id, o.public_id, o.org_name, o.org_type
-  from organizations o
-  join user_organizations u on o.id = u.organization_id
-  where u.user_id = auth.uid();
+    select o.id, o.public_id, o.org_name, o.org_type
+    from organizations o
+    join user_organizations u on o.id = u.organization_id
+    where u.user_id = auth.uid();
+
+create or replace view org_integrations_view with(security_invoker=true) as
+    select 
+        o.public_id as org_public_id,
+        ot.external_installation_id,
+        ot.data_provider
+    from organizations_integrations ot
+    join organizations o on o.id = ot.organization_id;
 
 -- User-projects view
 create or replace view user_projects_view with(security_invoker=true) as

@@ -1,9 +1,6 @@
 "use client"
 
-import { saveInstallationId } from "@/lib/database";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Loader2 } from "lucide-react";
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -20,7 +17,11 @@ export default function VerifyGithubIntegrationPage() {
 
             try {
                 if (!userCode) {
-                    authorizeUserWithOAuth(router, installationId);
+                    // Authorize user with OAuth
+                    const clientId = "Iv23linNrsFe7b8xf4lJ";
+                    const redirectUrl = `http://localhost:3000/integrations/github/verify?installation_id=${installationId}`;
+                    const githubOAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}`;
+                    router.push(githubOAuthUrl);
                     return;
                 }
 
@@ -52,12 +53,5 @@ export default function VerifyGithubIntegrationPage() {
             }
         </div>
     )
-}
-
-async function authorizeUserWithOAuth(router: AppRouterInstance, installationId: string,) {
-    const clientId = "Iv23linNrsFe7b8xf4lJ";
-    const redirectUrl = `http://localhost:3000/integrations/github/verify?installation_id=${installationId}`;
-    const githubOAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUrl}`;
-    router.push(githubOAuthUrl);
 }
 

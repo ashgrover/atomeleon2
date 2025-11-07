@@ -19,8 +19,7 @@ Deno.serve(async (req) => {
         const isInstallationIdVerified = await checkUserInstallation(installation_id, userAccessToken);
 
         if (isInstallationIdVerified) {
-            const authHeader = req.headers.get("Authorization")!;
-            await storeGithubAppInstallationIdInDB(authHeader, installation_id, org_public_id, null);
+            await storeGithubAppInstallationIdInDB(req, installation_id, org_public_id);
         }
 
         return new Response(JSON.stringify({ success: true }),
@@ -81,21 +80,20 @@ async function checkUserInstallation(installationId: string, userAccessToken: st
     return hasInstallation;
 }
 
-async function storeGithubAppInstallationIdInDB(authHeader: string, installationId: string, orgPublicId: string, orgIntegrationId: string | null) {
+async function storeGithubAppInstallationIdInDB(req: Request, installationId: string, orgPublicId: string) {
     const supabase = createClient(
         Deno.env.get("SUPABASE_URL") ?? "",
         Deno.env.get("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? "",
         {
             global: {
-                headers: { Authorization: authHeader }
+                headers: { Authorization: req.headers.get("Authorization")! }
             }
         }
     );
 
     const result = await supabase.rpc("create_github_integration", {
         installation_id: installationId,
-        org_public_id: orgPublicId,
-        org_integration_id: orgIntegrationId
+        org_public_id: orgPublicId
     });
 
     if (result.error) throw result.error;
