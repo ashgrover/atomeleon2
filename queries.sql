@@ -658,7 +658,37 @@ with check (
     )
 );
 
+create policy "user can select project integrations"
+on project_integrations
+as permissive
+for select
+to authenticated
+using(
+    exists(
+        select 1
+        from public.organizations_integrations ot
+        join user_organizations uo on uo.organization_id = ot.organization_id
+        where id = project_integrations.org_integration_id
+        and uo.user_id = auth.uid()
+        and uo.role in ('admin', 'pm')
+    )
+);
 
+create policy "user can add project integrations"
+on project_integrations
+as permissive
+for insert
+to authenticated
+with check (
+    exists (
+        select 1
+        from public.organizations_integrations ot
+        join user_organizations uo on uo.organization_id = ot.organization_id
+        where id = project_integrations.org_integration_id
+        and uo.user_id = auth.uid()
+        and uo.role in ('admin', 'pm')
+    )
+);
 
 
 -- For later
