@@ -13,7 +13,8 @@ type Repository = {
     nodeId: string,
     owner: string,
     fullName: string,
-    repoUrl: string
+    repoUrl: string,
+    orgIntegrationId: string
 }
 type FormState = {
     projName: string,
@@ -60,7 +61,7 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
 
         setIsLoading(false);
     }
-    
+
     if (dataProviderViewState.show && dataProviderViewState.projectId) {
         return <ConnectIntegrations orgId={orgId} projectId={dataProviderViewState.projectId} />
     }
@@ -123,7 +124,7 @@ function ConnectIntegrations({ orgId, projectId }: { orgId: string, projectId: s
                 console.log(err instanceof Error ? err.message : err);
             }
         };
-        
+
         async function getRepos() {
             const repos = await getGithubRepos(orgId);
             setRepoState(state => ({ ...state, repos: repos }));
@@ -221,8 +222,9 @@ async function getGithubRepos(orgId: string) {
                 nodeId: repo.node_id,
                 owner: repo.owner,
                 fullName: repo.full_name,
-                repoUrl: repo.repo_url
-            })
+                repoUrl: repo.repo_url,
+                orgIntegrationId: installation.org_integration_id
+            });
         });
     });
 

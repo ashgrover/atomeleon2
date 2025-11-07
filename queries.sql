@@ -482,9 +482,10 @@ create or replace view user_orgs_view with(security_invoker=true) as
 
 create or replace view org_integrations_view with(security_invoker=true) as
     select 
-        o.public_id as org_public_id,
+        ot.id as org_integration_id,
         ot.external_installation_id,
-        ot.data_provider
+        ot.data_provider,
+        o.public_id as org_public_id
     from organizations_integrations ot
     join organizations o on o.id = ot.organization_id;
 

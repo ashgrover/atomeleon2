@@ -10,6 +10,7 @@ import { corsHeaders, enableCors } from "../../util.ts";
 
 type GithubIntegration = {
     org_public_id: string,
+    org_integration_id: string,
     external_installation_id: string,
     data_provder: string
 }
@@ -31,7 +32,6 @@ Deno.serve(async (req) => {
 
         // get all installation ids of github for the org
         const integrations = await getGithubIntegrations(req, org_public_id);
-        console.log("Integrations", integrations);
         const installationRepos = await getAllGithubRepositories(integrations);
 
         console.log(installationRepos);
@@ -69,7 +69,6 @@ async function getGithubIntegrations(req: Request, orgPublicId: string) {
 }
 
 async function getAllGithubRepositories(integrations: GithubIntegration[]) {
-
     const octokitApp = new App({
         appId: Deno.env.get("GITHUB_APP_ID")!,
         privateKey: Deno.env.get("GITHUB_PRIVATE_KEY")!.replace(/\\n/g, "\n").trim(),
@@ -97,7 +96,11 @@ async function getAllGithubRepositories(integrations: GithubIntegration[]) {
                 repo_url: repo.html_url,
             }));
 
-            installationRepos.push({ installation_id: installationId, repos });
+            installationRepos.push({
+                installation_id: installationId,
+                org_integration_id: integrations[i].org_integration_id,
+                repos
+            });
         } catch (err) {
             console.log(err);
         }
