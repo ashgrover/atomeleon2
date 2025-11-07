@@ -461,7 +461,8 @@ as $$
         from public.organizations_integrations
         where external_installation_id = installation_id
     ) then
-        raise exception 'Installation Id already exists: %', installation_id;
+        raise notice 'Installation Id already exists: %', installation_id;
+        return true;
     end if;
 
     insert into public.organizations_integrations(

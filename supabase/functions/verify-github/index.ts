@@ -91,10 +91,10 @@ async function storeGithubAppInstallationIdInDB(req: Request, installationId: st
         }
     );
 
-    const result = await supabase.rpc("create_github_integration", {
+    const { error } = await supabase.rpc("create_github_integration", {
         installation_id: installationId,
         org_public_id: orgPublicId
     });
 
-    if (result.error) throw result.error;
+    if (error) throw error;
 }
