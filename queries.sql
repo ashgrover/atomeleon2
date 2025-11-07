@@ -57,7 +57,7 @@ CREATE TABLE projects (
     proj_name TEXT NOT NULL,
     proj_desc TEXT,
     status project_status DEFAULT 'active', -- 'active', 'completed', 'archived',
-    budget DECIMAL(10,2) DEFAULT 0,
+    budget DECIMAL(12,2) DEFAULT 0,
     start_date TIMESTAMPTZ DEFAULT now(),
     end_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
@@ -67,9 +67,9 @@ CREATE TABLE projects (
 CREATE TABLE project_integrations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     org_integration_id UUID NOT NULL REFERENCES organizations_integrations(id) ON DELETE CASCADE,
-    project_id UUID NOT NULL REFERENCES organizations_integrations(id) ON DELETE CASCADE,
-    external_resource_name TEXT,
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     external_resource_id TEXT,
+    external_resource_name TEXT,
     external_resource_url TEXT,
     metadata jsonb default '{}'::jsonb,
     connected_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -447,12 +447,21 @@ as $$
     where org.public_id = org_public_id;
 
     if not exists (
-        select 1 from public.user_organizations
+        select 1 
+        from public.user_organizations
         where organization_id = org_id
         and user_id = auth.uid()
         and role in ('admin', 'pm')
     ) then
         raise exception 'User not allowed: %', auth.uid();
+    end if;
+
+    if exists (
+        select 1 
+        from public.organizations_integrations
+        where external_installation_id = installation_id
+    ) then
+        raise exception 'Installation Id already exists: %', installation_id;
     end if;
 
     insert into public.organizations_integrations(
@@ -462,6 +471,53 @@ as $$
         connected_by
     ) values(
         org_id, 'github', installation_id, auth.uid()
+    );
+
+    return true;
+
+    exception
+        when others then
+        raise exception 'Insert failed: %', sqlerrm;
+        return false;
+    end;
+$$;
+
+create or replace function add_project_integration (
+    org_integration_id uuid,
+    project_id uuid,
+    resource_id text,
+    resouce_name text,
+    resource_url text
+)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+    begin
+    if org_integration_id is null 
+        or project_id is null 
+        or resource_id is null 
+        or resouce_name is null 
+        or resource_url is null 
+    then
+        raise exception 'Invalid fields';
+    end if;
+
+    insert into public.project_integrations(
+        org_integration_id, 
+        project_id, 
+        external_resource_id,
+        external_resource_name,
+        external_resource_url, 
+        connected_by
+    ) values(
+        org_integration_id,
+        project_id,
+        resource_id,
+        resouce_name,
+        resource_url,
+        auth.uid()
     );
 
     return true;
@@ -571,6 +627,38 @@ using (
         and project_id = projects.id
     )
 )
+
+create policy "user can select org integrations"
+on organizations_integrations
+as permissive
+for select
+to authenticated
+using(
+    exists(
+        select 1
+        from public.user_organizations
+        where organization_id = organizations_integrations.organization_id
+        and user_id = auth.uid()
+        and role in ('admin', 'pm')
+    )
+)
+
+create policy "user can create org integrations"
+on organizations_integrations
+as permissive
+for insert
+to authenticated
+with check (
+    exists (
+        select 1
+        from public.user_organizations
+        where organization_id = organizations_integrations.organization_id
+        and user_id = auth.uid()
+        and role in ('admin', 'pm')
+    )
+);
+
+
 
 
 -- For later

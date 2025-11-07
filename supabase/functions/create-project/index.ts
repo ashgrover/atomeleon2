@@ -43,8 +43,6 @@ Deno.serve(async (req) => {
             budget
         });
 
-        console.log("Data", data);
-
         if (error) throw error;
 
         return Response.json({ success: true, project_id: data }, {

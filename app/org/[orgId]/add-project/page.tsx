@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { FormEvent, use, useEffect, useState } from "react";
 
 type Repository = {
@@ -88,7 +88,7 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
 
                     <div className="grid gap-3 grid-cols-2">
                         <Label htmlFor="budget-label">Budget</Label>
-                        <Input type="number" id="title-label" required aria-labelledby="budget-label"
+                        <Input type="number" max={9999999999.99} step={0.01} id="title-label" required aria-labelledby="budget-label"
                             onChange={(e) => setFormState(state => ({ ...state, budget: Number(e.target.value) }))} />
                     </div>
                     <div className="flex justify-end gap-5">
@@ -138,16 +138,18 @@ function ConnectIntegrations({ orgId, projectId }: { orgId: string, projectId: s
         openWindow(githubAppUrl);
     }
 
-    const onSelectRepository = (repo: Repository) => {
+    const onSelectRepository = async (repo: Repository) => {
         setRepoState(state => ({ ...state, selectedRepo: repo }));
-        // TODO: save selected repo;
     }
 
     const onSkip = () => {
         window.location.reload();
     }
 
-    const onDone = () => {
+    const onDone = async () => {
+        if (!repoState.selectedRepo || !projectId) return;
+
+        await addProjectIntegration(repoState.selectedRepo, projectId);
         window.location.reload();
     }
 
@@ -174,8 +176,11 @@ function ConnectIntegrations({ orgId, projectId }: { orgId: string, projectId: s
                         <div className="border-1 rounded-lg p-3 flex flex-col divide-y">
                             {repoState.repos.map(repo => (
                                 <div key={repo.id}
-                                    className="text-sm font-medium py-1 cursor-pointer"
-                                    onClick={() => onSelectRepository(repo)}>{repo.fullName}</div>
+                                    className="text-sm font-medium py-1 cursor-pointer flex items-center gap-1"
+                                    onClick={() => onSelectRepository(repo)}>
+                                    {repoState.selectedRepo === repo && <Check size={18} className="mt-0.5" />}
+                                    {repo.fullName}
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -215,8 +220,14 @@ async function getGithubRepos(orgId: string) {
     const { installation_repos }: { installation_repos: [] } = data;
 
     const repos: Repository[] = [];
-    installation_repos.forEach((installation: any) => {
-        installation.repos.forEach(repo => {
+    installation_repos.forEach((installation: { repos: [], org_integration_id: string }) => {
+        installation.repos.forEach((repo: {
+            id: number,
+            node_id: string,
+            owner: string,
+            full_name: string,
+            repo_url: string
+        }) => {
             repos.push({
                 id: repo.id,
                 nodeId: repo.node_id,
@@ -229,6 +240,21 @@ async function getGithubRepos(orgId: string) {
     });
 
     return repos;
+}
+
+async function addProjectIntegration(repo: Repository, projectId: string) {
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.functions.invoke("add-project-integration", {
+        body: {
+            org_integration_id: repo.orgIntegrationId,
+            project_id: projectId,
+            resource_id: String(repo.id),
+            resouce_name: repo.fullName,
+            resource_url: repo.repoUrl
+        }
+    });
+
+    if (error) throw error;
 }
 
 function openWindow(url: string) {

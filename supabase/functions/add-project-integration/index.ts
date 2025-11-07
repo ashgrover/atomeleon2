@@ -1,0 +1,47 @@
+// Follow this setup guide to integrate the Deno language server with your editor:
+// https://deno.land/manual/getting_started/setup_your_environment
+// This enables autocomplete, go to definition, etc.
+
+// Setup type definitions for built-in Supabase Runtime APIs
+import "supabase-edge-runtime";
+import { createClient } from "supabase-js@2";
+import { corsHeaders, enableCors } from "../../util.ts";
+
+Deno.serve(async (req) => {
+    enableCors(req);
+
+    try {
+        const { org_integration_id, project_id, resource_id, resouce_name, resource_url } = await req.json();
+        if (!org_integration_id || !project_id || !resouce_name || !resource_id || !resource_url) {
+            throw Error("Invalid fields!");
+        }
+
+        const supabase = createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? "",
+            {
+                global: {
+                    headers: { Authorization: req.headers.get("Authorization")! }
+                }
+            }
+        );
+
+        const { error } = await supabase.rpc("add_project_integration", {
+            org_integration_id,
+            project_id,
+            resource_id,
+            resouce_name,
+            resource_url
+        });
+
+        if (error) throw error;
+
+        return new Response(JSON.stringify({ success: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
+        )
+
+    } catch (err) {
+        console.error(err);
+        return new Response(String(err instanceof Error ? err?.message : err), { status: 500 });
+    }
+});
