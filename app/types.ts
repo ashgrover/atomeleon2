@@ -3,17 +3,23 @@
 export const ORG_TYPES = ["company", "agency", "startup", "nonprofit", "educational", "government", "none"] as const;
 export type OrgType = typeof ORG_TYPES[number];
 
+export type ProjectStatus = "active" | "completed" | "archived";
+
 export type Project = {
     id: string,
-    public_id: string,
-    orgId: string,
-    title: string,
-    description?: string,
+    publicId: string,
+    projName: string,
+    projDec: string,
+    status: ProjectStatus,
     budget?: number,
+    startDate: Date,
+    endDate: Date,
+    createdAt: Date,
+    updatedAt: Date,
     repoUrl: string,
-    labels?: string[],
-    startDate: string,
-    createdDate: string,
+    orgId: string,
+    orgPublicId: string,
+    orgIntegrationId: string
 }
 
 export const enum TaskStatus {

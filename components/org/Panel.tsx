@@ -15,31 +15,11 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Project } from "@/app/types";
 
-type ProjectStatus = "active" | "completed" | "archived";
-
-type Project = {
-    id: string,
-    public_id: string,
-    proj_name: string,
-    proj_desc: string,
-    status: ProjectStatus,
-    budget: number,
-    start_date: Date,
-    end_date: Date,
-    created_at: Date,
-    updated_at: Date,
-    repo_url: string,
-    org_id: string,
-    org_public_id: string,
-    org_integration_id: string,
-}
 
 export default function Panel({ orgId, projects }: { orgId: string, projects: Project[] }) {
     // Menu items.
@@ -205,7 +185,7 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
 
             const result = await supabase.functions.invoke("delete-project", {
                 body: {
-                    org_id: project.org_id,
+                    org_id: project.orgId,
                     proj_id: project.id
                 }
             });
@@ -226,7 +206,7 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                     <SidebarMenuButton asChild className="cursor-pointer">
                         <CollapsibleTrigger>
                             <SquareChartGantt />
-                            <span className="font-semibold">{project.proj_name}</span>
+                            <span className="font-semibold">{project.projName}</span>
                             {/* <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" /> */}
                         </CollapsibleTrigger>
                     </SidebarMenuButton>
@@ -235,22 +215,22 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                         <SidebarMenuSub>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                    <Link href={`/org/${orgId}/projects/${project.public_id}/budget`}>Budget</Link>
+                                    <Link href={`/org/${orgId}/projects/${project.publicId}/budget`}>Budget</Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                    <Link href={`/org/${orgId}/projects/${project.public_id}/members`}>Members</Link>
+                                    <Link href={`/org/${orgId}/projects/${project.publicId}/members`}>Members</Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                    <Link href={`/org/${orgId}/projects/${project.public_id}/tasks`}>Tasks</Link>
+                                    <Link href={`/org/${orgId}/projects/${project.publicId}/tasks`}>Tasks</Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                             <SidebarMenuSubItem>
                                 <SidebarMenuSubButton asChild className="text-slate-600 font-medium">
-                                    <Link href={`/org/${orgId}/projects/${project.public_id}/performance`}>Performance</Link>
+                                    <Link href={`/org/${orgId}/projects/${project.publicId}/performance`}>Performance</Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                         </SidebarMenuSub>
@@ -264,7 +244,7 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                         </SidebarMenuAction>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start">
-                        <Link href={`/org/${orgId}/projects/${project.public_id}/project-settings`}>
+                        <Link href={`/org/${orgId}/projects/${project.publicId}/project-settings`}>
                             <DropdownMenuItem>Settings</DropdownMenuItem>
                         </Link>
                         <DropdownMenuItem variant="destructive"

@@ -1,10 +1,12 @@
+import { Project } from "@/app/types";
 import Panel from "@/components/org/Panel";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import camelcaseKeys from 'camelcase-keys';
 
 export default async function OrgLayout({ children, params }: { children: React.ReactNode, params: Promise<{ orgId: string }> }) {
     const { orgId } = await params;
 
-    let projects = [];
+    let projects: Project[] = [];
     try {
         const supabase = await createSupabaseServerClient();
         const { data, error: authError } = await supabase.auth.getClaims();
@@ -16,8 +18,8 @@ export default async function OrgLayout({ children, params }: { children: React.
             .select("*")
             .eq("org_publid_id", orgId);
 
-        projects = result;
-
+        projects = camelcaseKeys(result as object[], { deep: true }) as Project[];
+        
         if (error) throw error;
     } catch (err) {
         console.log(err);

@@ -1,14 +1,16 @@
 
 "use client";
 
+import { Project } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { saveRepo } from "@/lib/database";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import camelcaseKeys from "camelcase-keys";
 import { Loader2 } from "lucide-react";
-import { use, useEffect, useState } from "react";
+import { FormEvent, use, useEffect, useState } from "react";
 
 type Repo = {
     id: number,
@@ -41,20 +43,25 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ orgI
 
 
 function ProjectDetails({ orgId, projectId }: { orgId: string, projectId: string }) {
+    const [isDataLoading, setIsDataLoading] = useState(false);
     const [isLoading, setIsLoadingState] = useState(false);
     const [formState, setFormState] = useState<FormState>({ projName: "", projDesc: "", budget: 0 });
 
     useEffect(() => {
         async function getProjectDetails() {
             try {
+                setIsDataLoading(true);
                 const supabase = createSupabaseBrowserClient();
-                console.log(projectId)
                 const { data, error } = await supabase
                     .from("project_details_view")
                     .select("*")
-                    .eq("proj_public_id", projectId)
-                console.log(data);
-                // TODO: Put it into Project object.
+                    .eq("proj_public_id", projectId);
+
+                if (!data?.length) return;
+
+                const project: Project = camelcaseKeys(data[0] as object, { deep: true }) as Project;
+                setFormState(state => ({ ...state, ...project }));
+                setIsDataLoading(false);
 
                 if (error) throw error;
             } catch (err) {
@@ -66,8 +73,10 @@ function ProjectDetails({ orgId, projectId }: { orgId: string, projectId: string
     }, [projectId]);
 
 
-    const onUpdate = async () => {
+    const onUpdate = async (e: FormEvent) => {
+        e.preventDefault();
         try {
+            setIsLoadingState(true);
             const supabase = createSupabaseBrowserClient();
 
             const result = await supabase.functions.invoke("update-project", {
@@ -80,6 +89,7 @@ function ProjectDetails({ orgId, projectId }: { orgId: string, projectId: string
             });
 
             if (result.error) throw result.error;
+            setIsLoadingState(false);
             window.location.reload();
 
         } catch (err: unknown) {
@@ -89,33 +99,44 @@ function ProjectDetails({ orgId, projectId }: { orgId: string, projectId: string
 
     return (
         <form className="border-1 rounded-2xl bg-white 
-                    [&>div]:border-b-1 [&>div]:border-gray-200 [&>div]:px-8 [&>div]:py-6">
+                    [&>div]:border-b-1 [&>div]:border-gray-200 [&>div]:px-8 [&>div]:py-6 relative">
+            {isDataLoading &&
+                <div className="absolute bg-gray-100 opacity-90 w-full h-full z-1 flex justify-center">
+                    <div className="flex gap-2 items-center">
+                        <Loader2 className="animate-spin" />
+                        <p className="font-medium text-xl">Loading...</p>
+                    </div>
+                </div>}
             <div>
                 <p className="font-bold">Project Details</p>
                 <p className="text-sm text-gray-500">Update project information</p>
             </div>
 
             <div className="grid grid-cols-2">
-                <Label htmlFor="title-label">Name</Label>
-                <Input type="text" id="title-label" aria-labelledby="title-label"
+                <Label htmlFor="name-label">Name</Label>
+                <Input type="text" id="name-label" aria-labelledby="name-label"
+                    value={formState.projName}
                     onChange={(e) => setFormState(state => ({ ...state, projName: e.target.value }))} />
             </div>
 
             <div className="grid grid-cols-2">
                 <Label htmlFor="desc-label">Description</Label>
                 <Textarea id="desc-label" aria-labelledby="desc-label"
+                    value={formState.projDesc}
                     onChange={(e) => setFormState(state => ({ ...state, projDesc: e.target.value }))} />
             </div>
 
             <div className="grid grid-cols-2">
                 <Label htmlFor="budget-label">Budget</Label>
-                <Input type="number" id="title-label" aria-labelledby="budget-label"
+                <Input type="number" id="budget-label" aria-labelledby="budget-label"
+                    value={formState.budget}
                     onChange={(e) => setFormState(state => ({ ...state, budget: Number(e.target.value) }))} />
             </div>
 
             <Button className="w-35 m-5 flex ml-auto"
                 type="submit"
-                disabled={isLoading}>
+                disabled={isLoading}
+                onClick={onUpdate}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isLoading ? "Updating..." : "Update"}
             </Button>
