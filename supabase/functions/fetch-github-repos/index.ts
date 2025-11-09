@@ -8,14 +8,14 @@ import { createClient } from "supabase-js@2";
 import { App } from "octokit";
 import { corsHeaders, enableCors } from "../../util.ts";
 
-type GithubIntegration = {
+type GithubIntegrationResponse = {
     org_public_id: string,
     org_integration_id: string,
     external_installation_id: string,
     data_provder: string
 }
 
-type Repository = {
+type RepositoryResponse = {
     id: number,
     node_id: string,
     owner: string,
@@ -68,7 +68,7 @@ async function getGithubIntegrations(req: Request, orgPublicId: string) {
     return data;
 }
 
-async function getAllGithubRepositories(integrations: GithubIntegration[]) {
+async function getAllGithubRepositories(integrations: GithubIntegrationResponse[]) {
     const octokitApp = new App({
         appId: Deno.env.get("GITHUB_APP_ID")!,
         privateKey: Deno.env.get("GITHUB_PRIVATE_KEY")!.replace(/\\n/g, "\n").trim(),
@@ -88,7 +88,7 @@ async function getAllGithubRepositories(integrations: GithubIntegration[]) {
 
             if (!data || data.total_count === 0) return null;
 
-            const repos: Repository[] = data.repositories.map(repo => ({
+            const repos: RepositoryResponse[] = data.repositories.map(repo => ({
                 id: repo.id,
                 node_id: repo.node_id,
                 owner: repo.owner.login,

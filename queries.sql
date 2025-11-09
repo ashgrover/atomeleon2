@@ -64,6 +64,13 @@ CREATE TABLE projects (
     updated_at TIMESTAMPTZ DEFAULT now(),
 );
 
+CREATE TYPE resource_type AS ENUM (
+    'none',
+    'issues',
+    'repository',
+    'issues_repository'
+);
+
 CREATE TABLE project_integrations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     org_integration_id UUID NOT NULL REFERENCES organizations_integrations(id) ON DELETE CASCADE,
@@ -71,6 +78,7 @@ CREATE TABLE project_integrations (
     external_resource_id TEXT,
     external_resource_name TEXT,
     external_resource_url TEXT,
+    external_resource_type resource_type NOT NULL DEFAULT 'none',
     metadata jsonb default '{}'::jsonb,
     connected_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
@@ -530,6 +538,56 @@ as $$
     end;
 $$;
 
+
+-- TODO
+create or replace function update_project_integration (
+    org_integration_id uuid,
+    project_id uuid,
+    resource_id text,
+    resouce_name text,
+    resource_url text
+)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+    begin
+    if org_integration_id is null 
+        or project_id is null 
+        or resource_id is null 
+        or resouce_name is null 
+        or resource_url is null 
+    then
+        raise exception 'Invalid fields';
+    end if;
+
+    insert into public.project_integrations(
+        org_integration_id, 
+        project_id, 
+        external_resource_id,
+        external_resource_name,
+        external_resource_url, 
+        connected_by
+    ) values(
+        org_integration_id,
+        project_id,
+        resource_id,
+        resouce_name,
+        resource_url,
+        auth.uid()
+    );
+
+    return true;
+
+    exception
+        when others then
+        raise exception 'Insert failed: %', sqlerrm;
+        return false;
+    end;
+$$;
+
+
 ------- User Views ------------
 create or replace view user_orgs_view with(security_invoker=true) as
     select o.id, o.public_id, o.org_name, o.org_type
@@ -579,6 +637,18 @@ create or replace view project_details_view with(security_invoker=true) as
         updated_at,
         repo_url
     from projects;
+
+create or replace view project_integrations_view with(security_invoker=true) as
+    select
+        p.public_id as proj_public_id,
+        pi.external_resource_id,
+        pi.external_resource_name,
+        pi.external_resource_url,
+        pi.external_resource_type,
+        ot.data_provider
+    from projects p
+    join project_integrations pi on pi.project_id = p.id
+    join organizations_integrations ot on ot.id = pi.org_integration_id;
 
 -------- User policies ----------
 create policy "user can access their projects"

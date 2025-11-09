@@ -1,30 +1,28 @@
 
 "use client";
 
-import { Project } from "@/app/types";
+import { Project, Repository } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { saveRepo } from "@/lib/database";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getGithubRepos } from "@/lib/utils";
 import camelcaseKeys from "camelcase-keys";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { FormEvent, use, useEffect, useState } from "react";
 
-type Repo = {
-    id: number,
-    name: string,
-    fullName: string
-}
+
 type FormState = {
     projName: string,
     projDesc: string,
     budget: number,
 }
 type RepoState = {
-    repos: Repo[],
-    selectedRepo: Repo | null,
+    repos: Repository[],
+    selectedRepo: Repository | null,
+    currentRepo: Repository | null
 };
 
 export default function ProjectSettingsPage({ params }: { params: Promise<{ orgId: string, projectId: string }> }) {
@@ -106,7 +104,8 @@ function ProjectDetails({ orgId, projectId }: { orgId: string, projectId: string
                         <Loader2 className="animate-spin" />
                         <p className="font-medium text-xl">Loading...</p>
                     </div>
-                </div>}
+                </div>
+            }
             <div>
                 <p className="font-bold">Project Details</p>
                 <p className="text-sm text-gray-500">Update project information</p>
@@ -145,25 +144,69 @@ function ProjectDetails({ orgId, projectId }: { orgId: string, projectId: string
 }
 
 function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: string }) {
-    const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null });
+    const [isDataLoading, setIsDataLoading] = useState(false);
+    const [isLoading, setIsLoadingState] = useState(false);
+    const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null, currentRepo: null, });
 
     useEffect(() => {
-        // get repos
-    }, [])
+        async function getIntegrations() {
+            try {
+                setIsDataLoading(true);
+                const repos: Repository[] = await getGithubRepos(orgId);
+                const supabase = createSupabaseBrowserClient();
+                const { data, error } = await supabase
+                    .from("project_integrations_view")
+                    .select("*")
+                    .eq("proj_public_id", projectId);
+
+                if (error) throw error;
+                if (!data?.length) return;
+
+                const projectIntegrationResponse = data[0] as { external_resource_name: string };
+                const repo = repos.find(x => x.fullName === projectIntegrationResponse.external_resource_name);
+                setRepoState(state => ({ ...state, repos, selectedRepo: repo || null, currentRepo: repo || null }));
+                setIsDataLoading(false);
+            } catch (err) {
+                console.log(err);
+            }
+        }
+
+        getIntegrations();
+    }, [orgId, projectId]);
 
     const openGithub = () => {
         const url = "https://github.com/apps/someorgapp/installations/new";
         openWindow(url);
     }
 
-    const onSelectRepository = (repo: Repo) => {
+    const onSelectRepository = (repo: Repository) => {
         setRepoState(state => ({ ...state, selectedRepo: repo }));
-        saveRepo(repo);
+    }
+
+    const onUpdate = async () => {
+
+        try {
+            setIsLoadingState(true);
+            // TODO: Save repo
+
+
+            setIsLoadingState(false);
+        } catch (err) {
+            console.error(err);
+        }
     }
 
     return (
         <div className="border-1 rounded-2xl bg-white
-                     [&>div]:border-b-1 [&>div]:border-gray-200 [&>div]:px-8 [&>div]:py-6">
+                     [&>div]:border-b-1 [&>div]:border-gray-200 [&>div]:px-8 [&>div]:py-6 relative">
+            {isDataLoading &&
+                <div className="absolute bg-gray-100 opacity-90 w-full h-full z-1 flex justify-center">
+                    <div className="flex gap-2 items-center">
+                        <Loader2 className="animate-spin" />
+                        <p className="font-medium text-xl">Loading...</p>
+                    </div>
+                </div>
+            }
             <div>
                 <p className="font-bold">Data Providers</p>
                 <p className="text-sm text-gray-500">Add or remove data providers</p>
@@ -182,10 +225,12 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
                     <div className="border-1 rounded-lg p-3 flex flex-col divide-y">
                         {repoState.repos.map(repo => (
                             <div key={repo.id}
-                                className="text-sm font-medium py-1 cursor-pointer"
-                                onClick={() => onSelectRepository(repo)}>{repo.fullName}</div>
+                                className="text-sm font-medium py-1 cursor-pointer flex items-center gap-1"
+                                onClick={() => onSelectRepository(repo)}>
+                                {repoState.selectedRepo === repo && <Check size={18} className="mt-0.5" />}
+                                {repo.fullName}
+                            </div>
                         ))}
-
                     </div>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -194,7 +239,12 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
                     <Button variant="secondary">Azure Repos</Button>
                 </div>
             </div>
-            <Button className="m-5 w-35 flex ml-auto">Update</Button>
+            <Button className="m-5 w-35 flex ml-auto"
+                onClick={onUpdate}
+                disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading ? "Updating..." : "Update"}
+            </Button>
         </div>
     )
 }

@@ -1,21 +1,16 @@
 "use client";
 
+import { Repository } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getGithubRepos } from "@/lib/utils";
 import { Check, Loader2 } from "lucide-react";
 import { FormEvent, use, useEffect, useState } from "react";
 
-type Repository = {
-    id: number,
-    nodeId: string,
-    owner: string,
-    fullName: string,
-    repoUrl: string,
-    orgIntegrationId: string
-}
+
 type FormState = {
     projName: string,
     projDesc: string,
@@ -51,7 +46,6 @@ export default function AddProjectPage({ params }: { params: Promise<{ orgId: st
 
             if (error) throw error;
             const { project_id } = data;
-            console.log(project_id, "==", data)
 
             setDataProviderViewState({ show: true, projectId: project_id });
 
@@ -211,36 +205,7 @@ async function verifyGithubInstallation(orgId: string, installationId: string, u
     return true;
 }
 
-async function getGithubRepos(orgId: string) {
-    const supabase = createSupabaseBrowserClient();
-    const { data, error } = await supabase.functions.invoke("fetch-github-repos", {
-        body: { org_public_id: orgId }
-    });
-    if (error) throw error;
-    const { installation_repos }: { installation_repos: [] } = data;
 
-    const repos: Repository[] = [];
-    installation_repos.forEach((installation: { repos: [], org_integration_id: string }) => {
-        installation.repos.forEach((repo: {
-            id: number,
-            node_id: string,
-            owner: string,
-            full_name: string,
-            repo_url: string
-        }) => {
-            repos.push({
-                id: repo.id,
-                nodeId: repo.node_id,
-                owner: repo.owner,
-                fullName: repo.full_name,
-                repoUrl: repo.repo_url,
-                orgIntegrationId: installation.org_integration_id
-            });
-        });
-    });
-
-    return repos;
-}
 
 async function addProjectIntegration(repo: Repository, projectId: string) {
     const supabase = createSupabaseBrowserClient();

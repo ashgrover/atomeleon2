@@ -16,9 +16,17 @@ export type Project = {
     endDate: Date,
     createdAt: Date,
     updatedAt: Date,
-    repoUrl: string,
     orgId: string,
     orgPublicId: string,
+    orgIntegrationId: string
+}
+
+export type Repository = {
+    id: number,
+    nodeId: string,
+    owner: string,
+    fullName: string,
+    repoUrl: string,
     orgIntegrationId: string
 }
 
