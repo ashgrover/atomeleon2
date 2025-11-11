@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getGithubRepos } from "@/lib/utils";
+import { getGithubRepos, verifyGithubInstallation } from "@/lib/utils";
 import camelcaseKeys from "camelcase-keys";
 import { Check, Loader2 } from "lucide-react";
 import { FormEvent, use, useEffect, useState } from "react";
@@ -148,6 +148,20 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
     const [repoState, setRepoState] = useState<RepoState>({ repos: [], selectedRepo: null, currentRepo: null, });
 
     useEffect(() => {
+        window.onmessage = async (e: MessageEvent) => {
+            if (e.origin !== "http://localhost:3000") throw Error("Invalid request");
+            try {
+                const { installation_id, user_code } = e.data;
+                const isVerified = await verifyGithubInstallation(orgId, installation_id, user_code);
+                if (isVerified) {
+                    const repos = await getGithubRepos(orgId);
+                    setRepoState(state => ({ ...state, repos: repos }));
+                }
+            } catch (err) {
+                console.log(err instanceof Error ? err.message : err);
+            }
+        };
+
         async function getIntegrations() {
             try {
                 setIsDataLoading(true);
@@ -196,7 +210,7 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
             || repoState.selectedRepo?.repoUrl === currentRepo.repoUrl) {
             return;
         }
-        
+
         try {
             setIsLoadingState(true);
             const supabase = createSupabaseBrowserClient();

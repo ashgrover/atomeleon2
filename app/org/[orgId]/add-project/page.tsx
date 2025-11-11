@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getGithubRepos } from "@/lib/utils";
+import { getGithubRepos, verifyGithubInstallation } from "@/lib/utils";
 import { Check, Loader2 } from "lucide-react";
 import { FormEvent, use, useEffect, useState } from "react";
 
@@ -209,17 +209,7 @@ function ConnectIntegrations({ orgId, projectId }: { orgId: string, projectId: s
     )
 }
 
-async function verifyGithubInstallation(orgId: string, installationId: string, userCode: string): Promise<boolean> {
-    const supabase = createSupabaseBrowserClient();
-    const result = await supabase.functions.invoke("verify-github", {
-        body: { org_public_id: orgId, installation_id: installationId, user_code: userCode }
-    });
 
-    if (result.error) throw result.error;
-    if (!result.response?.ok) throw Error("Something went wrong! Please try again later.");
-
-    return true;
-}
 
 
 function openWindow(url: string) {

@@ -26,6 +26,17 @@ export function getWeekDates(timestampMs: number): Date[] {
     return weekRange;
 }
 
+export async function verifyGithubInstallation(orgId: string, installationId: string, userCode: string): Promise<boolean> {
+    const supabase = createSupabaseBrowserClient();
+    const result = await supabase.functions.invoke("verify-github", {
+        body: { org_public_id: orgId, installation_id: installationId, user_code: userCode }
+    });
+
+    if (result.error) throw result.error;
+    if (!result.response?.ok) throw Error("Something went wrong! Please try again later.");
+
+    return true;
+}
 
 export async function getGithubRepos(orgId: string) {
     const supabase = createSupabaseBrowserClient();
