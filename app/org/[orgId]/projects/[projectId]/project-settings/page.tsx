@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { saveRepo } from "@/lib/database";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getGithubRepos } from "@/lib/utils";
 import camelcaseKeys from "camelcase-keys";
@@ -154,20 +153,24 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
                 setIsDataLoading(true);
                 const repos: Repository[] = await getGithubRepos(orgId);
                 const supabase = createSupabaseBrowserClient();
+
                 const { data, error } = await supabase
                     .from("project_integrations_view")
                     .select("*")
                     .eq("proj_public_id", projectId);
 
                 if (error) throw error;
-                if (!data?.length) return;
+                if (!data?.length) {
+                    setIsDataLoading(false);
+                    return;
+                };
 
                 const projectIntegrationResponse = data[0] as { external_resource_name: string };
                 const repo = repos.find(x => x.fullName === projectIntegrationResponse.external_resource_name);
                 setRepoState(state => ({ ...state, repos, selectedRepo: repo || null, currentRepo: repo || null }));
                 setIsDataLoading(false);
             } catch (err) {
-                console.log(err);
+                console.error(err);
             }
         }
 
@@ -184,11 +187,30 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
     }
 
     const onUpdate = async () => {
+        const selectedRepo = repoState.selectedRepo;
+        const currentRepo = repoState.currentRepo;
 
+        if (!selectedRepo
+            || !currentRepo
+            || selectedRepo.fullName === currentRepo.fullName
+            || repoState.selectedRepo?.repoUrl === currentRepo.repoUrl) {
+            return;
+        }
+        
         try {
             setIsLoadingState(true);
-            // TODO: Save repo
-
+            const supabase = createSupabaseBrowserClient();
+            const { error } = await supabase.functions.invoke("update-project-integration", {
+                body: {
+                    old_org_integration_id: currentRepo.orgIntegrationId,
+                    new_org_integration_id: selectedRepo.orgIntegrationId,
+                    proj_public_id: projectId,
+                    resource_id: String(selectedRepo.id),
+                    resource_name: selectedRepo.fullName,
+                    resource_url: selectedRepo.repoUrl
+                }
+            });
+            if (error) throw error;
 
             setIsLoadingState(false);
         } catch (err) {

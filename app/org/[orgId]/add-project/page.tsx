@@ -141,10 +141,26 @@ function ConnectIntegrations({ orgId, projectId }: { orgId: string, projectId: s
     }
 
     const onDone = async () => {
-        if (!repoState.selectedRepo || !projectId) return;
+        const selectedRepo = repoState.selectedRepo;
+        if (!selectedRepo || !projectId) return;
 
-        await addProjectIntegration(repoState.selectedRepo, projectId);
-        window.location.reload();
+        try {
+            const supabase = createSupabaseBrowserClient();
+            const { error } = await supabase.functions.invoke("add-project-integration", {
+                body: {
+                    org_integration_id: selectedRepo.orgIntegrationId,
+                    project_id: projectId,
+                    resource_id: String(selectedRepo.id),
+                    resouce_name: selectedRepo.fullName,
+                    resource_url: selectedRepo.repoUrl
+                }
+            });
+
+            if (error) throw error;
+            window.location.reload();
+        } catch (err) {
+            console.error(err);
+        }
     }
 
 
@@ -205,22 +221,6 @@ async function verifyGithubInstallation(orgId: string, installationId: string, u
     return true;
 }
 
-
-
-async function addProjectIntegration(repo: Repository, projectId: string) {
-    const supabase = createSupabaseBrowserClient();
-    const { error } = await supabase.functions.invoke("add-project-integration", {
-        body: {
-            org_integration_id: repo.orgIntegrationId,
-            project_id: projectId,
-            resource_id: String(repo.id),
-            resouce_name: repo.fullName,
-            resource_url: repo.repoUrl
-        }
-    });
-
-    if (error) throw error;
-}
 
 function openWindow(url: string) {
     const width = 800;

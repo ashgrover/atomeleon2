@@ -350,6 +350,24 @@ as $$
     end;
 $$;
 
+create or replace function can_user_edit_project_integrations(
+    org_integ_id uuid
+)
+returns boolean
+language plpgsql
+set search_path = ''
+as $$
+    begin
+        return exists (
+            select 1
+            from public.organizations_integrations ot
+            join public.user_organizations uo on uo.organization_id = ot.organization_id
+            where id = org_integ_id
+            and uo.user_id = auth.uid()
+            and uo.role in ('admin', 'pm')
+    );
+    end;
+$$;
 
 create or replace function update_project(
     proj_public_id text,
@@ -539,12 +557,12 @@ as $$
 $$;
 
 
--- TODO
 create or replace function update_project_integration (
-    org_integration_id uuid,
-    project_id uuid,
+    old_org_integration_id uuid,
+    new_org_integration_id uuid,
+    proj_public_id text,
     resource_id text,
-    resouce_name text,
+    resource_name text,
     resource_url text
 )
 returns boolean
@@ -552,31 +570,46 @@ language plpgsql
 security invoker
 set search_path = ''
 as $$
+    declare
+        org_integ_id uuid;
+        proj_id uuid;
+
     begin
-    if org_integration_id is null 
-        or project_id is null 
+    if old_org_integration_id is null
+        or new_org_integration_id is null
+        or proj_public_id is null 
         or resource_id is null 
-        or resouce_name is null 
+        or resource_name is null 
         or resource_url is null 
     then
         raise exception 'Invalid fields';
     end if;
 
-    insert into public.project_integrations(
-        org_integration_id, 
-        project_id, 
-        external_resource_id,
-        external_resource_name,
-        external_resource_url, 
-        connected_by
-    ) values(
-        org_integration_id,
-        project_id,
-        resource_id,
-        resouce_name,
-        resource_url,
-        auth.uid()
-    );
+    select id into proj_id
+    from public.projects
+    where public_id = proj_public_id;
+
+    if proj_id is null then
+        raise exception 'Valid project id: %', proj_id;
+    end if;
+
+    if not public.can_user_edit_project(proj_id) then
+        raise exception 'Invalid org member: %', auth.uid(); 
+    end if; 
+
+    org_integ_id := old_org_integration_id;
+    if old_org_integration_id != new_org_integration_id then
+        org_integ_id := new_org_integration_id;
+    end if;
+
+    update public.project_integrations
+    set
+        org_integration_id = org_integ_id,
+        external_resource_id = resource_id,
+        external_resource_name = resource_name,
+        external_resource_url = resource_url,
+        updated_at = now()
+    where project_id = proj_id;
 
     return true;
 
@@ -747,32 +780,23 @@ on project_integrations
 as permissive
 for select
 to authenticated
-using(
-    exists(
-        select 1
-        from public.organizations_integrations ot
-        join user_organizations uo on uo.organization_id = ot.organization_id
-        where id = project_integrations.org_integration_id
-        and uo.user_id = auth.uid()
-        and uo.role in ('admin', 'pm')
-    )
-);
+using (can_user_edit_project_integrations(project_integrations.org_integration_id));
 
 create policy "user can add project integrations"
 on project_integrations
 as permissive
 for insert
 to authenticated
-with check (
-    exists (
-        select 1
-        from public.organizations_integrations ot
-        join user_organizations uo on uo.organization_id = ot.organization_id
-        where id = project_integrations.org_integration_id
-        and uo.user_id = auth.uid()
-        and uo.role in ('admin', 'pm')
-    )
-);
+with check (can_user_edit_project_integrations(project_integrations.org_integration_id));
+
+create policy "user can update project integrations"
+on project_integrations
+as permissive
+for update
+to authenticated
+using (can_user_edit_project_integrations(project_integrations.org_integration_id))
+with check (can_user_edit_project_integrations(project_integrations.org_integration_id));
+
 
 
 -- For later
