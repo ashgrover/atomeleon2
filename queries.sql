@@ -114,10 +114,8 @@ CREATE TABLE tasks (
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT,
-    type TEXT,
     status TEXT,
     estimated_hours DECIMAL(10,2),
-    actual_hours DECIMAL(10,2),
     priority TEXT,
     due_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
@@ -128,12 +126,6 @@ CREATE TABLE task_labels (
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
     label_id UUID NOT NULL REFERENCES labels(id) ON DELETE CASCADE,
     PRIMARY KEY (task_id, label_id)
-);
-
-CREATE TABLE task_assignees (
-    task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    PRIMARY KEY (task_id, user_id)
 );
 
 
@@ -639,7 +631,6 @@ create or replace view org_integrations_view with(security_invoker=true) as
     from organizations_integrations ot
     join organizations o on o.id = ot.organization_id;
 
--- User-projects view
 create or replace view user_projects_view with(security_invoker=true) as
     select 
         o.public_id as org_publid_id,
@@ -685,10 +676,42 @@ create or replace view project_integrations_view with(security_invoker=true) as
     join project_integrations pi on pi.project_id = p.id
     join organizations_integrations ot on ot.id = pi.org_integration_id;
 
--- create or replace view tasks_view with(security_invoker=true) as
---     select 
---         p.public_id as proj_public_id,
-      
+create or replace view tasks_view with(security_invoker=true) as
+    select
+        p.public_id as proj_public_id,
+        t.public_id,
+        t.external_key,
+        t.external_url,
+        t.title,
+        t.status,
+        t.estimated_hours,
+        t.created_at,
+        t.updated_at,
+
+        coalesce(
+            array_agg(distinct ta.user_id) filter (where ta.user_id is not null), '{}'
+        ) as assignees,
+
+        coalesce(
+            sum(
+                coalesce(tl.hours, 0)
+            ), 0
+        ) as logged_hours,
+
+        coalesce(
+            sum(
+               coalesce(tl.hours, 0) * coalesce(uo.hourly_rate, 0)
+            ), 0
+        ) as cost,
+
+    from tasks t
+    join projects p on p.id = t.project_id
+    left join task_assignees ta on ta.task_id = t.id
+    left join time_logs tl on tl.task_id = t.id
+    left join user_organizations uo on uo.user_id = tl.user_id
+    group by t.id;
+    order by t.id;
+     
 
 -------- User policies ----------
 create policy "user can access their projects"
@@ -782,6 +805,7 @@ with check (
     )
 );
 
+-- TODO: Fix these policies for project integrations
 create policy "user can select project integrations"
 on project_integrations
 as permissive
