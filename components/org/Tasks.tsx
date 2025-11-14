@@ -62,7 +62,7 @@ function TaskRow({ task, hasPR = false }: { task: Task, hasPR?: boolean }) {
                 </TableCell>
                 <TableCell className="px-0">{hasPR ? <div className="bg-slate-300 w-fit p-1 rounded-sm"><GitPullRequest size={16} /></div> : null}</TableCell>
                 <TableCell className="font-semibold text-blue-600 underline">
-                    <a href={task.url} target="_blank">
+                    <a href={task.taskUrl} target="_blank">
                         {task.publicKey}
                     </a>
                 </TableCell>
@@ -71,7 +71,7 @@ function TaskRow({ task, hasPR = false }: { task: Task, hasPR?: boolean }) {
                     <Tooltip delayDuration={300}>
                         <TooltipTrigger>
                             <div className="text-wrap underline text-left truncate max-w-xs">
-                                <a href={task.url} target="_blank" className="truncate">
+                                <a href={task.taskUrl} target="_blank" className="truncate">
                                     {taskTitle}
                                 </a>
                             </div>
@@ -90,7 +90,7 @@ function TaskRow({ task, hasPR = false }: { task: Task, hasPR?: boolean }) {
                 </TableCell>
 
                 <TableCell>{task.assignees?.join(", ")}</TableCell>
-                <TableCell>{task.createdDate}</TableCell>
+                <TableCell>{task.createdAt}</TableCell>
                 <TableCell className="">$5500.00</TableCell>
                 <TableCell className="">2</TableCell>
             </TableRow>

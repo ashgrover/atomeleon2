@@ -39,18 +39,17 @@ export type Task = {
     id: string,
     publicId?: string,
     publicKey?: string,
-    projectId?: string,
     title: string,
-    type?: string,
+    status: TaskStatus
+    taskUrl?: string,
     estimatedHours?: number,
     actualHours: number,
-    status: TaskStatus
-    labels?: string[],
     assignees?: string[],
-    createdDate: string,
-    updatedDate?: string,
-    dueDate?: string,
-    url?: string
+    createdAt: string,
+    updatedAt?: string,
+    cost: number,
+    commitCount: number,
+    pullRequestCount: number
 }
 
 export type CodeCommit = {

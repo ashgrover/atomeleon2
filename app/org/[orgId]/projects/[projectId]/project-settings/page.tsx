@@ -31,7 +31,7 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ orgI
         <div className="bg-slate-50 p-5 w-full flex justify-center">
             <div className="flex flex-col gap-5 mt-5 sm:min-w-3xl h-fit">
                 <h1 className="text-2xl font-semibold">Project Settings</h1>
-                <ProjectDetails orgId={orgId} projectId={projectId} />
+                <ProjectDetails projectId={projectId} />
                 <IntegrationSettings orgId={orgId} projectId={projectId} />
             </div>
         </div>
@@ -39,7 +39,7 @@ export default function ProjectSettingsPage({ params }: { params: Promise<{ orgI
 }
 
 
-function ProjectDetails({ orgId, projectId }: { orgId: string, projectId: string }) {
+function ProjectDetails({ projectId }: { projectId: string }) {
     const [isDataLoading, setIsDataLoading] = useState(false);
     const [isLoading, setIsLoadingState] = useState(false);
     const [formState, setFormState] = useState<FormState>({ projName: "", projDesc: "", budget: 0 });

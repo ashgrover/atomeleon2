@@ -12,9 +12,9 @@ export const mockTasksData: Task[] = [
         status: TaskStatus.Open,
         labels: ["label1, label2, label3"],
         assignees: ["user1"],
-        createdDate: "May 12, 2024",
-        updatedDate: "May 20, 2024",
-        url: ""
+        createdAt: "May 12, 2024",
+        updatedAt: "May 20, 2024",
+        taskUrl: ""
     },
     {
         id: "t2",
@@ -26,9 +26,9 @@ export const mockTasksData: Task[] = [
         status: TaskStatus.Open,
         labels: ["label1, label2, label3"],
         assignees: ["user1", "user2"],
-        createdDate: "May 12, 2024",
-        updatedDate: "May 20, 2024",
-        url: ""
+        createdAt: "May 12, 2024",
+        updatedAt: "May 20, 2024",
+        taskUrl: ""
     },
     {
         id: "t3",
@@ -40,9 +40,9 @@ export const mockTasksData: Task[] = [
         status: TaskStatus.Open,
         labels: ["label1, label2, label3"],
         assignees: ["user1", "user2", "user3"],
-        createdDate: "May 12, 2024",
-        updatedDate: "May 20, 2024",
-        url: ""
+        createdAt: "May 12, 2024",
+        updatedAt: "May 20, 2024",
+        taskUrl: ""
     },
     {
         id: "t4",
@@ -54,9 +54,9 @@ export const mockTasksData: Task[] = [
         status: TaskStatus.Open,
         labels: ["label1, label2, label3"],
         assignees: ["user1", "user2", "user3"],
-        createdDate: "May 12, 2024",
-        updatedDate: "May 20, 2024",
-        url: ""
+        createdAt: "May 12, 2024",
+        updatedAt: "May 20, 2024",
+        taskUrl: ""
     },
     {
         id: "t5",
@@ -68,9 +68,9 @@ export const mockTasksData: Task[] = [
         status: TaskStatus.Open,
         labels: ["label1, label2, label3"],
         assignees: ["user1", "user2", "user3"],
-        createdDate: "May 12, 2024",
-        updatedDate: "May 20, 2024",
-        url: ""
+        createdAt: "May 12, 2024",
+        updatedAt: "May 20, 2024",
+        taskUrl: ""
     },
     {
         id: "t6",
@@ -82,9 +82,9 @@ export const mockTasksData: Task[] = [
         status: TaskStatus.Open,
         labels: ["label1, label2, label3"],
         assignees: ["user1", "user2", "user3"],
-        createdDate: "May 12, 2024",
-        updatedDate: "May 20, 2024",
-        url: ""
+        createdAt: "May 12, 2024",
+        updatedAt: "May 20, 2024",
+        taskUrl: ""
     },
     {
         id: "t7",
@@ -96,9 +96,9 @@ export const mockTasksData: Task[] = [
         status: TaskStatus.Open,
         labels: ["label1, label2, label3"],
         assignees: ["user1", "user2", "user3"],
-        createdDate: "May 12, 2024",
-        updatedDate: "May 20, 2024",
-        url: ""
+        createdAt: "May 12, 2024",
+        updatedAt: "May 20, 2024",
+        taskUrl: ""
     },
     {
         id: "t8",
@@ -110,9 +110,9 @@ export const mockTasksData: Task[] = [
         status: TaskStatus.Open,
         labels: ["label1, label2, label3"],
         assignees: ["user1", "user2", "user3"],
-        createdDate: "May 12, 2024",
-        updatedDate: "May 20, 2024",
-        url: ""
+        createdAt: "May 12, 2024",
+        updatedAt: "May 20, 2024",
+        taskUrl: ""
     },
 ];
 

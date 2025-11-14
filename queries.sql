@@ -83,6 +83,8 @@ CREATE TABLE project_integrations (
     connected_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
+    last_synced_at TIMESTAMPTZ DEFAULT NULL,
+    last_webhook_at TIMESTAMPTZ DEFAULT NULL,
     unique (project_id, org_integration_id)
 )
 
@@ -113,7 +115,7 @@ CREATE TABLE tasks (
     title TEXT NOT NULL,
     description TEXT,
     type TEXT,
-    status TEXT DEFAULT 'todo',       -- 'todo', 'in_progress', 'done',
+    status TEXT,
     estimated_hours DECIMAL(10,2),
     actual_hours DECIMAL(10,2),
     priority TEXT,
@@ -682,6 +684,11 @@ create or replace view project_integrations_view with(security_invoker=true) as
     from projects p
     join project_integrations pi on pi.project_id = p.id
     join organizations_integrations ot on ot.id = pi.org_integration_id;
+
+-- create or replace view tasks_view with(security_invoker=true) as
+--     select 
+--         p.public_id as proj_public_id,
+      
 
 -------- User policies ----------
 create policy "user can access their projects"
