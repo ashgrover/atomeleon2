@@ -12,10 +12,10 @@ Deno.serve(async (req) => {
 
     try {
         const { old_org_integration_id, new_org_integration_id, proj_public_id,
-            resource_id, resource_name, resource_url } = await req.json();
+            resource_id, resource_name, resource_owner, resource_url } = await req.json();
 
         if (!old_org_integration_id || !new_org_integration_id || !proj_public_id ||
-            !resource_id || !resource_name || !resource_url) {
+            !resource_id || !resource_name || !resource_owner || !resource_url) {
             throw Error("Invalid fields!");
         }
 
@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
             proj_public_id,
             resource_id,
             resource_name,
+            resource_owner,
             resource_url
         });
 

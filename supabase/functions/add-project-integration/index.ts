@@ -11,8 +11,11 @@ Deno.serve(async (req) => {
     enableCors(req);
 
     try {
-        const { org_integration_id, project_id, resource_id, resouce_name, resource_url } = await req.json();
-        if (!org_integration_id || !project_id || !resouce_name || !resource_id || !resource_url) {
+        const { org_integration_id, project_id, resource_id,
+            resource_name, resource_owner, resource_url } = await req.json();
+
+        if (!org_integration_id || !project_id || !resource_id
+            || !resource_name || !resource_owner || !resource_url) {
             throw Error("Invalid fields!");
         }
 
@@ -30,7 +33,8 @@ Deno.serve(async (req) => {
             org_integration_id,
             project_id,
             resource_id,
-            resouce_name,
+            resource_name,
+            resource_owner,
             resource_url
         });
 

@@ -38,7 +38,7 @@ export async function verifyGithubInstallation(orgId: string, installationId: st
     return true;
 }
 
-export async function getGithubRepos(orgId: string) {
+export async function fetchGithubRepos(orgId: string) {
     const supabase = createSupabaseBrowserClient();
     const { data, error } = await supabase.functions.invoke("fetch-github-repos", {
         body: { org_public_id: orgId }

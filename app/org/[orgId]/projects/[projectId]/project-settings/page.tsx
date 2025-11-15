@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { getGithubRepos, verifyGithubInstallation } from "@/lib/utils";
+import { fetchGithubRepos, verifyGithubInstallation } from "@/lib/utils";
 import camelcaseKeys from "camelcase-keys";
 import { Check, Loader2 } from "lucide-react";
 import { FormEvent, use, useEffect, useState } from "react";
@@ -154,7 +154,7 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
                 const { installation_id, user_code } = e.data;
                 const isVerified = await verifyGithubInstallation(orgId, installation_id, user_code);
                 if (isVerified) {
-                    const repos = await getGithubRepos(orgId);
+                    const repos = await fetchGithubRepos(orgId);
                     setRepoState(state => ({ ...state, repos: repos }));
                 }
             } catch (err) {
@@ -165,7 +165,7 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
         async function getIntegrations() {
             try {
                 setIsDataLoading(true);
-                const repos: Repository[] = await getGithubRepos(orgId);
+                const repos: Repository[] = await fetchGithubRepos(orgId);
                 const supabase = createSupabaseBrowserClient();
 
                 const { data, error } = await supabase
@@ -221,6 +221,7 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
                     proj_public_id: projectId,
                     resource_id: String(selectedRepo.id),
                     resource_name: selectedRepo.fullName,
+                    resource_owner: selectedRepo.owner,
                     resource_url: selectedRepo.repoUrl
                 }
             });

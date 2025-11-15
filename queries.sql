@@ -77,6 +77,7 @@ CREATE TABLE project_integrations (
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     external_resource_id TEXT,
     external_resource_name TEXT,
+    external_resource_owner TEXT,
     external_resource_url TEXT,
     external_resource_type resource_type NOT NULL DEFAULT 'none',
     metadata jsonb default '{}'::jsonb,
@@ -508,6 +509,7 @@ create or replace function add_project_integration (
     project_id uuid,
     resource_id text,
     resouce_name text,
+    resource_owner text,
     resource_url text
 )
 returns boolean
@@ -530,6 +532,7 @@ as $$
         project_id, 
         external_resource_id,
         external_resource_name,
+        external_resource_owner,
         external_resource_url, 
         connected_by
     ) values(
@@ -537,6 +540,7 @@ as $$
         project_id,
         resource_id,
         resouce_name,
+        resource_owner,
         resource_url,
         auth.uid()
     );
@@ -557,6 +561,7 @@ create or replace function update_project_integration (
     proj_public_id text,
     resource_id text,
     resource_name text,
+    resource_owner text,
     resource_url text
 )
 returns boolean
@@ -601,6 +606,7 @@ as $$
         org_integration_id = org_integ_id,
         external_resource_id = resource_id,
         external_resource_name = resource_name,
+        external_resource_owner = resource_owner,
         external_resource_url = resource_url,
         updated_at = now()
     where project_id = proj_id;
@@ -672,6 +678,16 @@ create or replace view project_integrations_view with(security_invoker=true) as
         pi.external_resource_url,
         pi.external_resource_type,
         ot.data_provider
+    from projects p
+    join project_integrations pi on pi.project_id = p.id
+    join organizations_integrations ot on ot.id = pi.org_integration_id;
+
+
+create or replace view project_github_repo_view with(security_invoker=true) as
+    select
+        p.public_id as proj_public_id,
+        pi.external_resource_name,
+        ot.external_installation_id
     from projects p
     join project_integrations pi on pi.project_id = p.id
     join organizations_integrations ot on ot.id = pi.org_integration_id;

@@ -25,6 +25,7 @@ type TaskResponse = {
     pull_request_count: number
 }
 
+
 Deno.serve(async (req) => {
     enableCors(req);
 
@@ -39,7 +40,6 @@ Deno.serve(async (req) => {
             // and return
             const { data, error } = await fetchTasksFromDB(proj_public_id);
             if (error) throw error;
-
 
         }
 
@@ -65,7 +65,28 @@ async function fetchTasksFromDB(projPublicId: string) {
     return tasks;
 }
 
-async function fetchTasksFromGithub() {
+async function fetchTasksFromGithub(req: Request, projPublicId: string) {
+    const supabase = createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ?? "",
+        {
+            global: {
+                headers: { Authorization: req.headers.get("Authorization")! }
+            }
+        }
+    );
+
+    const { data, error } = await supabase
+        .from("project_github_repo_view")
+        .select("*")
+        .eq("proj_public_id", projPublicId);
+
+    if (error) throw error;
+
+    const { external_resource_name:rep, external_installation_id } = data[0];
+   
+
+
 
 }
 
