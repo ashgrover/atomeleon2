@@ -47,9 +47,12 @@ Deno.serve(async (req) => {
         // - get issues from github
         // - if there are new issues, insert them into DB
         // - fetch new tasks and return
+        const { data, error } = await fetchTasksFromGithub(req, proj_public_id);
+        if (error) throw error;
 
 
-        return new Response(JSON.stringify({ success: true }),
+
+        return new Response(JSON.stringify({ success: true, tasks: data }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
         )
     }
@@ -83,11 +86,12 @@ async function fetchTasksFromGithub(req: Request, projPublicId: string) {
 
     if (error) throw error;
 
-    const { external_resource_name:rep, external_installation_id } = data[0];
-   
+    const { external_resource_name, external_resource_owner, external_installation_id } = data[0];
+    if(!external_resource_name || !external_resource_owner || !external_installation_id){
+        throw Error("Invalid resource fields");
+    }
 
-
-
+    // TODO: get Github tasks here
 }
 
 async function insertTasksIntoDB() {

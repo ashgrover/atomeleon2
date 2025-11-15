@@ -522,6 +522,7 @@ as $$
         or project_id is null 
         or resource_id is null 
         or resouce_name is null 
+        or resource_owner is null 
         or resource_url is null 
     then
         raise exception 'Invalid fields';
@@ -579,6 +580,7 @@ as $$
         or proj_public_id is null 
         or resource_id is null 
         or resource_name is null 
+        or resource_owner is null 
         or resource_url is null 
     then
         raise exception 'Invalid fields';
@@ -687,6 +689,7 @@ create or replace view project_github_repo_view with(security_invoker=true) as
     select
         p.public_id as proj_public_id,
         pi.external_resource_name,
+        pi.external_resource_owner,
         ot.external_installation_id
     from projects p
     join project_integrations pi on pi.project_id = p.id
