@@ -52,14 +52,14 @@ export async function fetchGithubRepos(orgId: string) {
             id: number,
             node_id: string,
             owner: string,
-            full_name: string,
+            name: string,
             repo_url: string
         }) => {
             repos.push({
                 id: repo.id,
                 nodeId: repo.node_id,
                 owner: repo.owner,
-                fullName: repo.full_name,
+                name: repo.name,
                 repoUrl: repo.repo_url,
                 orgIntegrationId: installation.org_integration_id
             });

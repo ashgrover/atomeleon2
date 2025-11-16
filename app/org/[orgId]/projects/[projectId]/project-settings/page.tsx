@@ -174,13 +174,10 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
                     .eq("proj_public_id", projectId);
 
                 if (error) throw error;
-                if (!data?.length) {
-                    setIsDataLoading(false);
-                    return;
-                };
 
                 const projectIntegrationResponse = data[0] as { external_resource_name: string };
-                const repo = repos.find(x => x.fullName === projectIntegrationResponse.external_resource_name);
+                const repo = repos.find(x => x.name === projectIntegrationResponse?.external_resource_name);
+
                 setRepoState(state => ({ ...state, repos, selectedRepo: repo || null, currentRepo: repo || null }));
                 setIsDataLoading(false);
             } catch (err) {
@@ -205,22 +202,22 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
         const currentRepo = repoState.currentRepo;
 
         if (!selectedRepo
-            || !currentRepo
-            || selectedRepo.fullName === currentRepo.fullName
-            || repoState.selectedRepo?.repoUrl === currentRepo.repoUrl) {
+            || selectedRepo.name === currentRepo?.name
+            || selectedRepo.repoUrl === currentRepo?.repoUrl) {
             return;
         }
-
+        
         try {
             setIsLoadingState(true);
             const supabase = createSupabaseBrowserClient();
+
             const { error } = await supabase.functions.invoke("update-project-integration", {
                 body: {
-                    old_org_integration_id: currentRepo.orgIntegrationId,
+                    old_org_integration_id: currentRepo?.orgIntegrationId,
                     new_org_integration_id: selectedRepo.orgIntegrationId,
                     proj_public_id: projectId,
                     resource_id: String(selectedRepo.id),
-                    resource_name: selectedRepo.fullName,
+                    resource_name: selectedRepo.name,
                     resource_owner: selectedRepo.owner,
                     resource_url: selectedRepo.repoUrl
                 }
@@ -265,7 +262,7 @@ function IntegrationSettings({ orgId, projectId }: { orgId: string, projectId: s
                                 className="text-sm font-medium py-1 cursor-pointer flex items-center gap-1"
                                 onClick={() => onSelectRepository(repo)}>
                                 {repoState.selectedRepo === repo && <Check size={18} className="mt-0.5" />}
-                                {repo.fullName}
+                                {`${repo.owner}/${repo.name}`}
                             </div>
                         ))}
                     </div>

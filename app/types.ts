@@ -25,7 +25,7 @@ export type Repository = {
     id: number,
     nodeId: string,
     owner: string,
-    fullName: string,
+    name: string,
     repoUrl: string,
     orgIntegrationId: string
 }

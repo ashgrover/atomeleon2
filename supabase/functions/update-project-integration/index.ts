@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
         const { old_org_integration_id, new_org_integration_id, proj_public_id,
             resource_id, resource_name, resource_owner, resource_url } = await req.json();
 
-        if (!old_org_integration_id || !new_org_integration_id || !proj_public_id ||
+        if (!new_org_integration_id || !proj_public_id ||
             !resource_id || !resource_name || !resource_owner || !resource_url) {
             throw Error("Invalid fields!");
         }
@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
         );
 
         const { error } = await supabase.rpc("update_project_integration", {
-            old_org_integration_id,
+            old_org_integration_id: old_org_integration_id ?? null,
             new_org_integration_id,
             proj_public_id,
             resource_id,

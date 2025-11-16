@@ -19,7 +19,7 @@ type RepositoryResponse = {
     id: number,
     node_id: string,
     owner: string,
-    full_name: string,
+    name: string,
     repo_url: string,
 }
 
@@ -33,8 +33,6 @@ Deno.serve(async (req) => {
         // get all installation ids of github for the org
         const integrations = await getGithubIntegrations(req, org_public_id);
         const installationRepos = await getAllGithubRepositories(integrations);
-
-        console.log(installationRepos);
 
         return new Response(JSON.stringify({ success: true, installation_repos: installationRepos }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
@@ -92,7 +90,7 @@ async function getAllGithubRepositories(integrations: GithubIntegrationResponse[
                 id: repo.id,
                 node_id: repo.node_id,
                 owner: repo.owner.login,
-                full_name: repo.full_name,
+                name: repo.name,
                 repo_url: repo.html_url,
             }));
 

@@ -151,7 +151,7 @@ function ConnectIntegrations({ orgId, projectId }: { orgId: string, projectId: s
                     org_integration_id: selectedRepo.orgIntegrationId,
                     project_id: projectId,
                     resource_id: String(selectedRepo.id),
-                    resource_name: selectedRepo.fullName,
+                    resource_name: selectedRepo.name,
                     resource_owner: selectedRepo.owner,
                     resource_url: selectedRepo.repoUrl
                 }
@@ -190,7 +190,7 @@ function ConnectIntegrations({ orgId, projectId }: { orgId: string, projectId: s
                                     className="text-sm font-medium py-1 cursor-pointer flex items-center gap-1"
                                     onClick={() => onSelectRepository(repo)}>
                                     {repoState.selectedRepo === repo && <Check size={18} className="mt-0.5" />}
-                                    {repo.fullName}
+                                    {`${repo.owner}/${repo.name}`}
                                 </div>
                             ))}
                         </div>

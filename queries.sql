@@ -508,7 +508,7 @@ create or replace function add_project_integration (
     org_integration_id uuid,
     project_id uuid,
     resource_id text,
-    resouce_name text,
+    resource_name text,
     resource_owner text,
     resource_url text
 )
@@ -521,7 +521,7 @@ as $$
     if org_integration_id is null 
         or project_id is null 
         or resource_id is null 
-        or resouce_name is null 
+        or resource_name is null 
         or resource_owner is null 
         or resource_url is null 
     then
@@ -540,7 +540,7 @@ as $$
         org_integration_id,
         project_id,
         resource_id,
-        resouce_name,
+        resource_name,
         resource_owner,
         resource_url,
         auth.uid()
@@ -575,8 +575,7 @@ as $$
         proj_id uuid;
 
     begin
-    if old_org_integration_id is null
-        or new_org_integration_id is null
+    if new_org_integration_id is null
         or proj_public_id is null 
         or resource_id is null 
         or resource_name is null 
@@ -598,8 +597,19 @@ as $$
         raise exception 'Invalid org member: %', auth.uid(); 
     end if; 
 
+    if old_org_integration_id is null then
+       return public.add_project_integration(
+            new_org_integration_id,
+            proj_id,
+            resource_id,
+            resource_name,
+            resource_owner,
+            resource_url
+       );
+    end if;
+
     org_integ_id := old_org_integration_id;
-    if old_org_integration_id != new_org_integration_id then
+    if old_org_integration_id is distinct from new_org_integration_id then
         org_integ_id := new_org_integration_id;
     end if;
 
