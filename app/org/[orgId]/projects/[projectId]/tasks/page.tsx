@@ -1,25 +1,24 @@
 import Tasks from "@/components/org/Tasks";
-import octokitApp from "@/lib/octokitapp";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function ProjectTasksPage({ params }: { params: Promise<{ projectId: string, orgMemberId?: string }> }) {
     const { projectId, orgMemberId } = await params;
     const projectName = "Project";
 
-    // try {
-    //     const installationId: number = 87501622;
-    //     const octokit = await octokitApp.getInstallationOctokit(installationId);
-    //     const result = await octokit.request("GET /repos/ashgrover/atomeleon/issues", {
-    //         owner: "ashgrover",
-    //         repo: "atomeleon",
-    //         headers: {
-    //             'X-GitHub-Api-Version': '2022-11-28'
-    //         }
-    //     });
+    try {
+        const supabase = await createSupabaseServerClient();
+        const { data, error } = await supabase.functions.invoke("fetch-github-issues", {
+            body: {
+                proj_public_id: projectId,
+                fetch_new_issues: true
+            }
+        });
 
-    //     console.log(result.data);
-    // } catch (err) {
-    //     console.log(err)
-    // }
+        if (error) throw error;
+        console.log(data);
+    } catch (err) {
+        console.log(err)
+    }
 
     return (
         <div className="p-5">

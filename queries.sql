@@ -114,11 +114,7 @@ CREATE TABLE tasks (
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
-    description TEXT,
     status TEXT,
-    estimated_hours DECIMAL(10,2),
-    priority TEXT,
-    due_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -129,6 +125,11 @@ CREATE TABLE task_labels (
     PRIMARY KEY (task_id, label_id)
 );
 
+CREATE TABLE task_assignees (
+    task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    PRIMARY KEY (task_id, user_id)
+);
 
 CREATE TABLE time_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
@@ -573,62 +574,139 @@ as $$
     declare
         org_integ_id uuid;
         proj_id uuid;
-
     begin
-    if new_org_integration_id is null
-        or proj_public_id is null 
-        or resource_id is null 
-        or resource_name is null 
-        or resource_owner is null 
-        or resource_url is null 
-    then
-        raise exception 'Invalid fields';
-    end if;
+        if new_org_integration_id is null
+            or proj_public_id is null 
+            or resource_id is null 
+            or resource_name is null 
+            or resource_owner is null 
+            or resource_url is null 
+        then
+            raise exception 'Invalid fields';
+        end if;
 
-    select id into proj_id
-    from public.projects
-    where public_id = proj_public_id;
+        select id into proj_id
+        from public.projects
+        where public_id = proj_public_id;
 
-    if proj_id is null then
-        raise exception 'Valid project id: %', proj_id;
-    end if;
+        if proj_id is null then
+            raise exception 'Valid project id: %', proj_id;
+        end if;
 
-    if not public.can_user_edit_project(proj_id) then
-        raise exception 'Invalid org member: %', auth.uid(); 
-    end if; 
+        if not public.can_user_edit_project(proj_id) then
+            raise exception 'Invalid org member: %', auth.uid(); 
+        end if; 
 
-    if old_org_integration_id is null then
-       return public.add_project_integration(
-            new_org_integration_id,
+        if old_org_integration_id is null then
+        return public.add_project_integration(
+                new_org_integration_id,
+                proj_id,
+                resource_id,
+                resource_name,
+                resource_owner,
+                resource_url
+        );
+        end if;
+
+        org_integ_id := old_org_integration_id;
+        if old_org_integration_id is distinct from new_org_integration_id then
+            org_integ_id := new_org_integration_id;
+        end if;
+
+        update public.project_integrations
+        set
+            org_integration_id = org_integ_id,
+            external_resource_id = resource_id,
+            external_resource_name = resource_name,
+            external_resource_owner = resource_owner,
+            external_resource_url = resource_url,
+            updated_at = now()
+        where project_id = proj_id;
+
+        return true;
+
+        exception
+            when others then
+            raise exception 'Insert failed: %', sqlerrm;
+            return false;
+    end;
+$$;
+
+create or replace function batch_upsert_tasks(
+    proj_public_id text,
+    tasks_json jsonb
+)
+returns boolean
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+    declare
+        proj_id uuid;
+        org_id uuid;
+    begin
+        if proj_public_id is null
+            or tasks_json is null 
+        then
+            raise exception 'Invalid fields';
+        end if;
+
+        select id, organization_id 
+        into proj_id, org_id
+        from public.projects
+        where public_id = proj_public_id;
+
+        insert into public.tasks (
+            id,
+            public_id, 
+            external_id,
+            external_key, 
+            external_url, 
+            organization_id,
+            project_id,
+            title,
+            status,
+            created_at,
+            updated_at
+        )
+        select
+            (task->>'id')::uuid,
+            task->>'public_id',
+            (task->>'external_id')::text,
+            (task->>'external_key')::text,
+            task->>'external_url',
+            org_id,
             proj_id,
-            resource_id,
-            resource_name,
-            resource_owner,
-            resource_url
-       );
-    end if;
+            task->>'title',
+            task->>'status',
+            (task->>'created_at')::timestamptz,
+            (task->>'updated_at')::timestamptz
+        from jsonb_array_elements(tasks_json) as task
+        on conflict (id) do update
+        set
+            title = excluded.title,
+            status = excluded.status,
+            updated_at = excluded.updated_at;
 
-    org_integ_id := old_org_integration_id;
-    if old_org_integration_id is distinct from new_org_integration_id then
-        org_integ_id := new_org_integration_id;
-    end if;
+        -- insert into public.task_assignees (
+        --     task_id,
+        --     user_id
+        -- )
+        -- select
+        --     (task->>'id')::uuid as task_id,
+        --     (assignee->>'id')::uuid as user_id
+        -- from jsonb_array_elements(tasks_json) as task
+        -- cross join lateral jsonb_array_elements(
+        --     coalesce(task->'assignees','[]'::jsonb)
+        -- ) as assignee
+        -- on conflict (task_id, user_id) do nothing;
+        
+        return true;
 
-    update public.project_integrations
-    set
-        org_integration_id = org_integ_id,
-        external_resource_id = resource_id,
-        external_resource_name = resource_name,
-        external_resource_owner = resource_owner,
-        external_resource_url = resource_url,
-        updated_at = now()
-    where project_id = proj_id;
-
-    return true;
-
-    exception
-        when others then
-        raise exception 'Insert failed: %', sqlerrm;
-        return false;
+        exception
+            when others then
+            raise exception 'Insert failed: %', sqlerrm;
+            return false;
     end;
 $$;
 

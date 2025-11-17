@@ -2,6 +2,7 @@
   "imports": {
     "supabase-edge-runtime": "jsr:@supabase/functions-js/edge-runtime.d.ts",
     "supabase-js@2": "npm:@supabase/supabase-js@2",
-    "octokit": "https://esm.sh/octokit?dts"
+    "octokit": "https://esm.sh/octokit?dts",
+    "nanoid": "jsr:@sitnik/nanoid"
   }
 }
