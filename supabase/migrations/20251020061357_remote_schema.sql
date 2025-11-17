@@ -120,7 +120,7 @@ begin
   values (org_public_id, org_name, org_type)
   returning id into org_id;
 
-  insert into public.user_organizations(public_id, user_id, organization_id, role)
+  insert into public.organization_users(public_id, user_id, organization_id, role)
   values(user_org_public_id, auth.uid(), org_id, 'admin');
   return true;
 
@@ -191,7 +191,7 @@ CREATE TABLE IF NOT EXISTS "public"."organizations" (
 ALTER TABLE "public"."organizations" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."organizations_integrations" (
+CREATE TABLE IF NOT EXISTS "public"."organization_integrations" (
     "id" "uuid" DEFAULT "public"."uuid_generate_v7"() NOT NULL,
     "organization_id" "uuid" NOT NULL,
     "integration_type" "public"."integration_type" DEFAULT 'none'::"public"."integration_type" NOT NULL,
@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS "public"."organizations_integrations" (
 );
 
 
-ALTER TABLE "public"."organizations_integrations" OWNER TO "postgres";
+ALTER TABLE "public"."organization_integrations" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."projects" (
@@ -316,7 +316,7 @@ CREATE TABLE IF NOT EXISTS "public"."timesheets" (
 ALTER TABLE "public"."timesheets" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."user_organizations" (
+CREATE TABLE IF NOT EXISTS "public"."organization_users" (
     "public_id" "text" NOT NULL,
     "user_id" "uuid" NOT NULL,
     "organization_id" "uuid" NOT NULL,
@@ -327,16 +327,16 @@ CREATE TABLE IF NOT EXISTS "public"."user_organizations" (
 );
 
 
-ALTER TABLE "public"."user_organizations" OWNER TO "postgres";
+ALTER TABLE "public"."organization_users" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."user_projects" (
+CREATE TABLE IF NOT EXISTS "public"."project_users" (
     "user_id" "uuid" NOT NULL,
     "project_id" "uuid" NOT NULL
 );
 
 
-ALTER TABLE "public"."user_projects" OWNER TO "postgres";
+ALTER TABLE "public"."project_users" OWNER TO "postgres";
 
 
 ALTER TABLE ONLY "public"."labels"
@@ -349,7 +349,7 @@ ALTER TABLE ONLY "public"."labels"
 
 
 
-ALTER TABLE ONLY "public"."organizations_integrations"
+ALTER TABLE ONLY "public"."organization_integrations"
     ADD CONSTRAINT "organizations_integrations_pkey" PRIMARY KEY ("id");
 
 
@@ -424,17 +424,17 @@ ALTER TABLE ONLY "public"."timesheets"
 
 
 
-ALTER TABLE ONLY "public"."user_organizations"
+ALTER TABLE ONLY "public"."organization_users"
     ADD CONSTRAINT "user_organizations_pkey" PRIMARY KEY ("user_id", "organization_id");
 
 
 
-ALTER TABLE ONLY "public"."user_organizations"
+ALTER TABLE ONLY "public"."organization_users"
     ADD CONSTRAINT "user_organizations_public_id_key" UNIQUE ("public_id");
 
 
 
-ALTER TABLE ONLY "public"."user_projects"
+ALTER TABLE ONLY "public"."project_users"
     ADD CONSTRAINT "user_projects_pkey" PRIMARY KEY ("project_id", "user_id");
 
 
@@ -444,13 +444,13 @@ ALTER TABLE ONLY "public"."labels"
 
 
 
-ALTER TABLE ONLY "public"."organizations_integrations"
+ALTER TABLE ONLY "public"."organization_integrations"
     ADD CONSTRAINT "organizations_integrations_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."projects"
-    ADD CONSTRAINT "projects_org_integration_id_fkey" FOREIGN KEY ("org_integration_id") REFERENCES "public"."organizations_integrations"("id") ON DELETE SET NULL;
+    ADD CONSTRAINT "projects_org_integration_id_fkey" FOREIGN KEY ("org_integration_id") REFERENCES "public"."organization_integrations"("id") ON DELETE SET NULL;
 
 
 
@@ -534,22 +534,22 @@ ALTER TABLE ONLY "public"."timesheets"
 
 
 
-ALTER TABLE ONLY "public"."user_organizations"
+ALTER TABLE ONLY "public"."organization_users"
     ADD CONSTRAINT "user_organizations_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE CASCADE;
 
 
 
-ALTER TABLE ONLY "public"."user_organizations"
+ALTER TABLE ONLY "public"."organization_users"
     ADD CONSTRAINT "user_organizations_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 
-ALTER TABLE ONLY "public"."user_projects"
+ALTER TABLE ONLY "public"."project_users"
     ADD CONSTRAINT "user_projects_project_id_fkey" FOREIGN KEY ("project_id") REFERENCES "public"."projects"("id") ON DELETE CASCADE;
 
 
 
-ALTER TABLE ONLY "public"."user_projects"
+ALTER TABLE ONLY "public"."project_users"
     ADD CONSTRAINT "user_projects_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
@@ -755,9 +755,9 @@ GRANT ALL ON TABLE "public"."organizations" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."organizations_integrations" TO "anon";
-GRANT ALL ON TABLE "public"."organizations_integrations" TO "authenticated";
-GRANT ALL ON TABLE "public"."organizations_integrations" TO "service_role";
+GRANT ALL ON TABLE "public"."organization_integrations" TO "anon";
+GRANT ALL ON TABLE "public"."organization_integrations" TO "authenticated";
+GRANT ALL ON TABLE "public"."organization_integrations" TO "service_role";
 
 
 
@@ -803,15 +803,15 @@ GRANT ALL ON TABLE "public"."timesheets" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."user_organizations" TO "anon";
-GRANT ALL ON TABLE "public"."user_organizations" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_organizations" TO "service_role";
+GRANT ALL ON TABLE "public"."organization_users" TO "anon";
+GRANT ALL ON TABLE "public"."organization_users" TO "authenticated";
+GRANT ALL ON TABLE "public"."organization_users" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."user_projects" TO "anon";
-GRANT ALL ON TABLE "public"."user_projects" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_projects" TO "service_role";
+GRANT ALL ON TABLE "public"."project_users" TO "anon";
+GRANT ALL ON TABLE "public"."project_users" TO "authenticated";
+GRANT ALL ON TABLE "public"."project_users" TO "service_role";
 
 
 

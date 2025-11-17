@@ -25,7 +25,7 @@ CREATE TYPE data_provider AS ENUM (
     'gitlab'
 );
 
-CREATE TABLE organizations_integrations (
+CREATE TABLE organization_integrations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     data_provider data_provider NOT NULL DEFAULT 'none',
@@ -38,7 +38,7 @@ CREATE TABLE organizations_integrations (
 
 CREATE TYPE user_role AS ENUM ('admin', 'pm', 'contractor');
 
-CREATE TABLE user_organizations (
+CREATE TABLE organization_users (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     role user_role NOT NULL DEFAULT 'contractor',  -- 'admin', 'pm', 'contractor',
@@ -46,6 +46,18 @@ CREATE TABLE user_organizations (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     PRIMARY KEY(user_id, organization_id)
+);
+
+CREATE TABLE integration_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    org_integration_id UUID NOT NULL REFERENCES organization_integrations(id) ON DELETE CASCADE,
+    external_user_id TEXT NOT NULL,
+    external_username TEXT,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(org_integration_id, external_user_id)
 );
 
 CREATE TYPE project_status AS ENUM ('active','completed','archived');
@@ -73,7 +85,7 @@ CREATE TYPE resource_type AS ENUM (
 
 CREATE TABLE project_integrations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    org_integration_id UUID NOT NULL REFERENCES organizations_integrations(id) ON DELETE CASCADE,
+    org_integration_id UUID NOT NULL REFERENCES organization_integrations(id) ON DELETE CASCADE,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     external_resource_id TEXT,
     external_resource_name TEXT,
@@ -90,7 +102,7 @@ CREATE TABLE project_integrations (
 )
 
 
-CREATE TABLE user_projects (
+CREATE TABLE project_users (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     PRIMARY KEY (project_id, user_id)
@@ -127,8 +139,8 @@ CREATE TABLE task_labels (
 
 CREATE TABLE task_assignees (
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    PRIMARY KEY (task_id, user_id)
+    integration_user_id UUID NOT NULL REFERENCES integration_users(id) ON DELETE CASCADE,
+    PRIMARY KEY (task_id, integration_user_id)
 );
 
 CREATE TABLE time_logs (
@@ -187,16 +199,16 @@ CREATE OR REPLACE FUNCTION cleanup_user_projects_on_project_org_change()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Delete user_project links where user no longer belongs to the new org
-    DELETE FROM user_projects
+    DELETE FROM project_users
     WHERE project_id = NEW.id
       AND user_id NOT IN (
           SELECT user_id
-          FROM user_organizations
+          FROM organization_users
           WHERE organization_id = NEW.organization_id
       );
 
-    -- -- Update the organization_id in user_projects for remaining users
-    -- UPDATE user_projects
+    -- -- Update the organization_id in project_users for remaining users
+    -- UPDATE project_users
     -- SET organization_id = NEW.organization_id
     -- WHERE project_id = NEW.id;
 
@@ -253,7 +265,7 @@ begin
   values (public_id, org_name, org_type)
   returning id into org_id;
 
-  insert into public.user_organizations(user_id, organization_id, role)
+  insert into public.organization_users(user_id, organization_id, role)
   values(auth.uid(), org_id, 'admin');
   return true;
 
@@ -294,7 +306,7 @@ as $$
 
     if org_id not in (
         select organization_id
-        from public.user_organizations
+        from public.organization_users
         where user_id = auth.uid()
         and role in ('admin', 'pm')
         ) then
@@ -305,7 +317,7 @@ as $$
     values (public_id, org_id, proj_name, proj_desc, budget)
     returning id into proj_id;
 
-    insert into public.user_projects(user_id, project_id)
+    insert into public.project_users(user_id, project_id)
     values(auth.uid(), proj_id);
 
     return proj_id;
@@ -331,14 +343,14 @@ as $$
             where p.id = proj_id
             and exists(
                 select 1
-                from public.user_organizations uo
+                from public.organization_users uo
                 where uo.organization_id = p.organization_id
                 and uo.user_id = auth.uid()
                 and uo.role in ('admin', 'pm')
             )
             and exists(
                 select 1
-                from public.user_projects up
+                from public.project_users up
                 where up.project_id = p.id
                 and up.user_id = auth.uid()
             )
@@ -356,8 +368,8 @@ as $$
     begin
         return exists (
             select 1
-            from public.organizations_integrations ot
-            join public.user_organizations uo on uo.organization_id = ot.organization_id
+            from public.organization_integrations ot
+            join public.organization_users uo on uo.organization_id = ot.organization_id
             where id = org_integ_id
             and uo.user_id = auth.uid()
             and uo.role in ('admin', 'pm')
@@ -470,7 +482,7 @@ as $$
 
     if not exists (
         select 1 
-        from public.user_organizations
+        from public.organization_users
         where organization_id = org_id
         and user_id = auth.uid()
         and role in ('admin', 'pm')
@@ -480,14 +492,14 @@ as $$
 
     if exists (
         select 1 
-        from public.organizations_integrations
+        from public.organization_integrations
         where external_installation_id = installation_id
     ) then
         raise notice 'Installation Id already exists: %', installation_id;
         return true;
     end if;
 
-    insert into public.organizations_integrations(
+    insert into public.organization_integrations(
         organization_id, 
         data_provider, 
         external_installation_id, 
@@ -715,7 +727,7 @@ $$;
 create or replace view user_orgs_view with(security_invoker=true) as
     select o.id, o.public_id, o.org_name, o.org_type
     from organizations o
-    join user_organizations u on o.id = u.organization_id
+    join organization_users u on o.id = u.organization_id
     where u.user_id = auth.uid();
 
 create or replace view org_integrations_view with(security_invoker=true) as
@@ -724,7 +736,7 @@ create or replace view org_integrations_view with(security_invoker=true) as
         ot.external_installation_id,
         ot.data_provider,
         o.public_id as org_public_id
-    from organizations_integrations ot
+    from organization_integrations ot
     join organizations o on o.id = ot.organization_id;
 
 create or replace view user_projects_view with(security_invoker=true) as
@@ -770,7 +782,7 @@ create or replace view project_integrations_view with(security_invoker=true) as
         ot.data_provider
     from projects p
     join project_integrations pi on pi.project_id = p.id
-    join organizations_integrations ot on ot.id = pi.org_integration_id;
+    join organization_integrations ot on ot.id = pi.org_integration_id;
 
 
 create or replace view project_github_repo_view with(security_invoker=true) as
@@ -781,7 +793,7 @@ create or replace view project_github_repo_view with(security_invoker=true) as
         ot.external_installation_id
     from projects p
     join project_integrations pi on pi.project_id = p.id
-    join organizations_integrations ot on ot.id = pi.org_integration_id;
+    join organization_integrations ot on ot.id = pi.org_integration_id;
 
 create or replace view tasks_view with(security_invoker=true) as
     select
@@ -815,7 +827,7 @@ create or replace view tasks_view with(security_invoker=true) as
     join projects p on p.id = t.project_id
     left join task_assignees ta on ta.task_id = t.id
     left join time_logs tl on tl.task_id = t.id
-    left join user_organizations uo on uo.user_id = tl.user_id
+    left join organization_users uo on uo.user_id = tl.user_id
     group by t.id;
     order by t.id;
      
@@ -828,15 +840,15 @@ to authenticated
 using (
   exists (
     select 1
-    from user_projects up
+    from project_users up
     where up.project_id = projects.id
     and up.user_id = auth.uid()
   )
 );
 
 create policy "user can access their projects"
-on user_projects
-using (auth.uid() = user_projects.user_id);
+on project_users
+using (auth.uid() = project_users.user_id);
 
 
 create policy "user can create project"
@@ -846,7 +858,7 @@ to authenticated
 with check (
  organization_id in (
   select organization_id 
-  from user_organizations
+  from organization_users
   where user_id = auth.uid()
   and role in ('admin', 'pm')
  )
@@ -868,7 +880,7 @@ to authenticated
 using (
      exists (
         select 1 
-        from public.user_organizations
+        from public.organization_users
         where user_id = auth.uid()
         and organization_id = projects.organization_id
         and role in ('admin', 'pm')
@@ -876,37 +888,37 @@ using (
     and
     exists (
         select 1
-        from public.user_projects
+        from public.project_users
         where user_id = auth.uid()
         and project_id = projects.id
     )
 )
 
 create policy "user can select org integrations"
-on organizations_integrations
+on organization_integrations
 as permissive
 for select
 to authenticated
 using(
     exists(
         select 1
-        from public.user_organizations
-        where organization_id = organizations_integrations.organization_id
+        from public.organization_users
+        where organization_id = organization_integrations.organization_id
         and user_id = auth.uid()
         and role in ('admin', 'pm')
     )
 )
 
 create policy "user can create org integrations"
-on organizations_integrations
+on organization_integrations
 as permissive
 for insert
 to authenticated
 with check (
     exists (
         select 1
-        from public.user_organizations
-        where organization_id = organizations_integrations.organization_id
+        from public.organization_users
+        where organization_id = organization_integrations.organization_id
         and user_id = auth.uid()
         and role in ('admin', 'pm')
     )
@@ -938,17 +950,17 @@ with check (can_user_edit_project_integrations(project_integrations.org_integrat
 
 
 -- For later
-ALTER TABLE user_projects
+ALTER TABLE project_users
   ADD CONSTRAINT fk_user_projects_project_org
     FOREIGN KEY (project_id, organization_id)
     REFERENCES projects(id, organization_id)
     ON DELETE CASCADE
     DEFERRABLE INITIALLY DEFERRED;
 
-ALTER TABLE user_projects
+ALTER TABLE project_users
   ADD CONSTRAINT fk_user_projects_user_org
     FOREIGN KEY (user_id, organization_id)
-    REFERENCES user_organizations(user_id, organization_id)
+    REFERENCES organization_users(user_id, organization_id)
     ON DELETE CASCADE
     DEFERRABLE INITIALLY DEFERRED;
 

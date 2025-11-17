@@ -123,7 +123,6 @@ async function fetchTasksFromGithub(req: Request, projPublicId: string) {
     if (!result.data.length) return [];
 
     return result.data as GithubIssueResponse[];
-
 }
 
 async function insertTasksIntoDB(req: Request, tasks: GithubIssueResponse[], projPublicId: string) {
