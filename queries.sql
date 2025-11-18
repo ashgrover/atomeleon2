@@ -660,7 +660,6 @@ as $$
         _org_id uuid;
         _org_integ_id uuid;
         _task_id uuid;
-        _integ_user_id uuid;
     begin
         if proj_public_id is null
             or tasks_json is null 
@@ -708,35 +707,35 @@ as $$
                 updated_at = excluded.updated_at
             returning id into _task_id;
 
-
-            insert into public.integration_users (
-                organization_id,
-                org_integration_id,
-                external_user_id,
-                external_username
+            with upserted_integration_users as (
+                insert into public.integration_users (
+                    organization_id,
+                    org_integration_id,
+                    external_user_id,
+                    external_username
+                )
+                select
+                    _org_id,
+                    _org_integ_id,
+                    (assignee->>'id')::text as external_user_id,
+                    (assignee->>'login') as external_username
+                from jsonb_array_elements(
+                    coalesce(_task->'assignees','[]'::jsonb)
+                ) as assignee
+                on conflict (org_integration_id, external_user_id) do update
+                set 
+                    external_username = excluded.external_username
+                returning id
             )
-            select
-                _org_id,
-                _org_integ_id,
-                (assignee->>'id')::text as external_user_id,
-                (assignee->>'login') as external_username
-            from jsonb_array_elements(
-                coalesce(_task->'assignees','[]'::jsonb)
-            ) as assignee
-            on conflict (org_integration_id, external_user_id) do update
-            set 
-                external_username = excluded.external_username
-            returning id into _integ_user_id;
-
 
             insert into public.task_assignees (
                 task_id,
                 integration_user_id
             )
-            values (
+            select
                 _task_id,
-                _integ_user_id
-            )
+                u.id
+            from upserted_integration_users u
             on conflict do nothing;
 
         end loop;

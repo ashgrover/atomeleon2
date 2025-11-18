@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
         if (!proj_public_id || !fetch_new_issues) return Response.json({ success: false }, { status: 400 });
 
-        console.log("HELLO",proj_public_id)
+
         if (!fetch_new_issues) {
             // TODO: get tasks from the database
             // and return
@@ -64,8 +64,8 @@ Deno.serve(async (req) => {
             // - get issues from github
             // - if there are new issues, insert them into DB
             // - fetch new tasks and return
-            // const tasks = await fetchTasksFromGithub(req, proj_public_id);
-            // await insertTasksIntoDB(req, tasks, proj_public_id);
+            const tasks = await fetchTasksFromGithub(req, proj_public_id);
+            await insertTasksIntoDB(req, tasks, proj_public_id);
         }
 
         return new Response(JSON.stringify({ success: true }),
@@ -142,7 +142,7 @@ async function insertTasksIntoDB(req: Request, tasks: GithubIssueResponse[], pro
     const alphanumericAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const nanoid = customAlphabet(alphanumericAlphabet, 12);
 
-    console.log(tasks)
+    console.log(tasks.length)
     const { data, error } = await supabase.rpc("batch_upsert_tasks", {
         proj_public_id: projPublicId,
         tasks_json: tasks.map(task => ({
