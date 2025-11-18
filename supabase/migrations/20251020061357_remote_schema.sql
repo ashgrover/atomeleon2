@@ -425,12 +425,12 @@ ALTER TABLE ONLY "public"."timesheets"
 
 
 ALTER TABLE ONLY "public"."organization_users"
-    ADD CONSTRAINT "user_organizations_pkey" PRIMARY KEY ("user_id", "organization_id");
+    ADD CONSTRAINT "organization_users_pkey" PRIMARY KEY ("user_id", "organization_id");
 
 
 
 ALTER TABLE ONLY "public"."organization_users"
-    ADD CONSTRAINT "user_organizations_public_id_key" UNIQUE ("public_id");
+    ADD CONSTRAINT "organization_users_public_id_key" UNIQUE ("public_id");
 
 
 
@@ -535,12 +535,12 @@ ALTER TABLE ONLY "public"."timesheets"
 
 
 ALTER TABLE ONLY "public"."organization_users"
-    ADD CONSTRAINT "user_organizations_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "organization_users_organization_id_fkey" FOREIGN KEY ("organization_id") REFERENCES "public"."organizations"("id") ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."organization_users"
-    ADD CONSTRAINT "user_organizations_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "organization_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 

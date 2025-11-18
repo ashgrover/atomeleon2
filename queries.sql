@@ -120,7 +120,7 @@ CREATE TABLE labels (
 CREATE TABLE tasks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     public_id TEXT UNIQUE NOT NULL,
-    external_id TEXT,
+    external_id TEXT NOT NULL,
     external_key TEXT,
     external_url TEXT,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
@@ -128,7 +128,8 @@ CREATE TABLE tasks (
     title TEXT NOT NULL,
     status TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(organization_id, project_id, external_id)
 );
 
 CREATE TABLE task_labels (
@@ -258,22 +259,22 @@ returns boolean
 language plpgsql
 set search_path = ''
 as $$
-declare
-  org_id uuid; 
-begin
-  insert into public.organizations(public_id, org_name, org_type)
-  values (public_id, org_name, org_type)
-  returning id into org_id;
+    declare
+        org_id uuid; 
+    begin
+        insert into public.organizations(public_id, org_name, org_type)
+        values (public_id, org_name, org_type)
+        returning id into org_id;
 
-  insert into public.organization_users(user_id, organization_id, role)
-  values(auth.uid(), org_id, 'admin');
-  return true;
+        insert into public.organization_users(user_id, organization_id, role)
+        values(auth.uid(), org_id, 'admin');
+        return true;
 
-  exception
-    when others then
-      raise exception 'Insert failed: %', sqlerrm;
-      return false;
-end;
+        exception
+            when others then
+            raise exception 'Insert failed: %', sqlerrm;
+            return false;
+    end;
 $$;
 
 
@@ -292,40 +293,40 @@ security definer
 set search_path = ''
 as $$
     declare
-    org_id uuid;
-    proj_id uuid; 
+        org_id uuid;
+        proj_id uuid; 
 
     begin
-    select id into org_id 
-    from public.organizations org 
-    where org.public_id = org_public_id;
-    
-    if org_id is null then
-        raise exception 'Invalid organization: %', org_id;
-    end if;
+        select id into org_id 
+        from public.organizations org 
+        where org.public_id = org_public_id;
+        
+        if org_id is null then
+            raise exception 'Invalid organization: %', org_id;
+        end if;
 
-    if org_id not in (
-        select organization_id
-        from public.organization_users
-        where user_id = auth.uid()
-        and role in ('admin', 'pm')
-        ) then
-        raise exception 'Invalid org member: %', auth.uid();
-    end if;
+        if org_id not in (
+            select organization_id
+            from public.organization_users
+            where user_id = auth.uid()
+            and role in ('admin', 'pm')
+            ) then
+            raise exception 'Invalid org member: %', auth.uid();
+        end if;
 
-    insert into public.projects(public_id, organization_id, proj_name, proj_desc, budget)
-    values (public_id, org_id, proj_name, proj_desc, budget)
-    returning id into proj_id;
+        insert into public.projects(public_id, organization_id, proj_name, proj_desc, budget)
+        values (public_id, org_id, proj_name, proj_desc, budget)
+        returning id into proj_id;
 
-    insert into public.project_users(user_id, project_id)
-    values(auth.uid(), proj_id);
+        insert into public.project_users(user_id, project_id)
+        values(auth.uid(), proj_id);
 
-    return proj_id;
+        return proj_id;
 
-    exception
-        when others then
-        raise exception 'Insert failed: %', sqlerrm;
-        return null;
+        exception
+            when others then
+            raise exception 'Insert failed: %', sqlerrm;
+            return null;
     end;
 $$;
 
@@ -389,7 +390,7 @@ security invoker
 set search_path = ''
 as $$
     declare
-    proj_id uuid;
+        proj_id uuid;
 
     begin
         select id into proj_id 
@@ -432,7 +433,7 @@ security invoker
 set search_path = ''
 as $$
     declare
-    deleted_id uuid;
+        deleted_id uuid;
 
     begin
         if not public.can_user_edit_project(proj_id) then
@@ -468,52 +469,52 @@ as $$
     declare
         org_id uuid;
     begin
-    if installation_id is null then
-        raise exception 'Invalid installation id: %', installation_id;
-    end if;
+        if installation_id is null then
+            raise exception 'Invalid installation id: %', installation_id;
+        end if;
 
-    if  org_public_id is null then
-        raise exception 'Invalid org id: %', org_public_id;
-    end if;
+        if  org_public_id is null then
+            raise exception 'Invalid org id: %', org_public_id;
+        end if;
 
-    select id into org_id
-    from public.organizations org
-    where org.public_id = org_public_id;
+        select id into org_id
+        from public.organizations org
+        where org.public_id = org_public_id;
 
-    if not exists (
-        select 1 
-        from public.organization_users
-        where organization_id = org_id
-        and user_id = auth.uid()
-        and role in ('admin', 'pm')
-    ) then
-        raise exception 'User not allowed: %', auth.uid();
-    end if;
+        if not exists (
+            select 1 
+            from public.organization_users
+            where organization_id = org_id
+            and user_id = auth.uid()
+            and role in ('admin', 'pm')
+        ) then
+            raise exception 'User not allowed: %', auth.uid();
+        end if;
 
-    if exists (
-        select 1 
-        from public.organization_integrations
-        where external_installation_id = installation_id
-    ) then
-        raise notice 'Installation Id already exists: %', installation_id;
+        if exists (
+            select 1 
+            from public.organization_integrations
+            where external_installation_id = installation_id
+        ) then
+            raise notice 'Installation Id already exists: %', installation_id;
+            return true;
+        end if;
+
+        insert into public.organization_integrations(
+            organization_id, 
+            data_provider, 
+            external_installation_id, 
+            connected_by
+        ) values(
+            org_id, 'github', installation_id, auth.uid()
+        );
+
         return true;
-    end if;
 
-    insert into public.organization_integrations(
-        organization_id, 
-        data_provider, 
-        external_installation_id, 
-        connected_by
-    ) values(
-        org_id, 'github', installation_id, auth.uid()
-    );
-
-    return true;
-
-    exception
-        when others then
-        raise exception 'Insert failed: %', sqlerrm;
-        return false;
+        exception
+            when others then
+            raise exception 'Insert failed: %', sqlerrm;
+            return false;
     end;
 $$;
 
@@ -531,40 +532,40 @@ security invoker
 set search_path = ''
 as $$
     begin
-    if org_integration_id is null 
-        or project_id is null 
-        or resource_id is null 
-        or resource_name is null 
-        or resource_owner is null 
-        or resource_url is null 
-    then
-        raise exception 'Invalid fields';
-    end if;
+        if org_integration_id is null 
+            or project_id is null 
+            or resource_id is null 
+            or resource_name is null 
+            or resource_owner is null 
+            or resource_url is null 
+        then
+            raise exception 'Invalid fields';
+        end if;
 
-    insert into public.project_integrations(
-        org_integration_id, 
-        project_id, 
-        external_resource_id,
-        external_resource_name,
-        external_resource_owner,
-        external_resource_url, 
-        connected_by
-    ) values(
-        org_integration_id,
-        project_id,
-        resource_id,
-        resource_name,
-        resource_owner,
-        resource_url,
-        auth.uid()
-    );
+        insert into public.project_integrations(
+            org_integration_id, 
+            project_id, 
+            external_resource_id,
+            external_resource_name,
+            external_resource_owner,
+            external_resource_url, 
+            connected_by
+        ) values(
+            org_integration_id,
+            project_id,
+            resource_id,
+            resource_name,
+            resource_owner,
+            resource_url,
+            auth.uid()
+        );
 
-    return true;
+        return true;
 
-    exception
-        when others then
-        raise exception 'Insert failed: %', sqlerrm;
-        return false;
+        exception
+            when others then
+            raise exception 'Insert failed: %', sqlerrm;
+            return false;
     end;
 $$;
 
@@ -654,8 +655,12 @@ security invoker
 set search_path = ''
 as $$
     declare
-        proj_id uuid;
-        org_id uuid;
+        _task jsonb;
+        _proj_id uuid;
+        _org_id uuid;
+        _org_integ_id uuid;
+        _task_id uuid;
+        _integ_user_id uuid;
     begin
         if proj_public_id is null
             or tasks_json is null 
@@ -663,56 +668,79 @@ as $$
             raise exception 'Invalid fields';
         end if;
 
-        select id, organization_id 
-        into proj_id, org_id
-        from public.projects
-        where public_id = proj_public_id;
+        select p.id, p.organization_id, pi.org_integration_id 
+        into _proj_id, _org_id, _org_integ_id
+        from public.projects p
+        join public.project_integrations pi on pi.project_id = p.id
+        where p.public_id = proj_public_id;
 
-        insert into public.tasks (
-            id,
-            public_id, 
-            external_id,
-            external_key, 
-            external_url, 
-            organization_id,
-            project_id,
-            title,
-            status,
-            created_at,
-            updated_at
-        )
-        select
-            (task->>'id')::uuid,
-            task->>'public_id',
-            (task->>'external_id')::text,
-            (task->>'external_key')::text,
-            task->>'external_url',
-            org_id,
-            proj_id,
-            task->>'title',
-            task->>'status',
-            (task->>'created_at')::timestamptz,
-            (task->>'updated_at')::timestamptz
-        from jsonb_array_elements(tasks_json) as task
-        on conflict (id) do update
-        set
-            title = excluded.title,
-            status = excluded.status,
-            updated_at = excluded.updated_at;
+        for _task in
+            select * from jsonb_array_elements(tasks_json)
+        loop
+            insert into public.tasks (
+                public_id, 
+                external_id,
+                external_key, 
+                external_url, 
+                organization_id,
+                project_id,
+                title,
+                status,
+                created_at,
+                updated_at
+            ) 
+            values (
+                _task->>'public_id',
+                (_task->>'external_id')::text,
+                (_task->>'external_key')::text,
+                _task->>'external_url',
+                _org_id,
+                _proj_id,
+                _task->>'title',
+                _task->>'status',
+                (_task->>'created_at')::timestamptz,
+                (_task->>'updated_at')::timestamptz
+            )
+            on conflict (organization_id, project_id, external_id) do update
+            set
+                title = excluded.title,
+                status = excluded.status,
+                updated_at = excluded.updated_at
+            returning id into _task_id;
 
-        -- insert into public.task_assignees (
-        --     task_id,
-        --     user_id
-        -- )
-        -- select
-        --     (task->>'id')::uuid as task_id,
-        --     (assignee->>'id')::uuid as user_id
-        -- from jsonb_array_elements(tasks_json) as task
-        -- cross join lateral jsonb_array_elements(
-        --     coalesce(task->'assignees','[]'::jsonb)
-        -- ) as assignee
-        -- on conflict (task_id, user_id) do nothing;
-        
+
+            insert into public.integration_users (
+                organization_id,
+                org_integration_id,
+                external_user_id,
+                external_username
+            )
+            select
+                _org_id,
+                _org_integ_id,
+                (assignee->>'id')::text as external_user_id,
+                (assignee->>'login') as external_username
+            from jsonb_array_elements(
+                coalesce(_task->'assignees','[]'::jsonb)
+            ) as assignee
+            on conflict (org_integration_id, external_user_id) do update
+            set 
+                external_username = excluded.external_username
+            returning id into _integ_user_id;
+
+
+            insert into public.task_assignees (
+                task_id,
+                integration_user_id
+            )
+            values (
+                _task_id,
+                _integ_user_id
+            )
+            on conflict do nothing;
+
+        end loop;
+
         return true;
 
         exception
@@ -821,14 +849,14 @@ create or replace view tasks_view with(security_invoker=true) as
             sum(
                coalesce(tl.hours, 0) * coalesce(uo.hourly_rate, 0)
             ), 0
-        ) as cost,
+        ) as cost
 
     from tasks t
     join projects p on p.id = t.project_id
     left join task_assignees ta on ta.task_id = t.id
     left join time_logs tl on tl.task_id = t.id
     left join organization_users uo on uo.user_id = tl.user_id
-    group by t.id;
+    group by t.id
     order by t.id;
      
 

@@ -7,7 +7,6 @@ import "supabase-edge-runtime";
 import { createClient } from "supabase-js@2";
 import { App } from "octokit";
 import { customAlphabet } from "nanoid";
-import { v7 as uuidv7 } from "npm:uuid@13.0.0";
 import { corsHeaders, enableCors } from "../../util.ts";
 
 type TaskResponse = {
@@ -34,9 +33,11 @@ type GithubIssueResponse = {
     state: string,
     html_url: string,
     user: {
+        id: string,
         login: string,
     },
     assignees: {
+        id: string,
         login: string
     }[],
     created_at: string,
@@ -53,7 +54,7 @@ Deno.serve(async (req) => {
 
         if (!proj_public_id || !fetch_new_issues) return Response.json({ success: false }, { status: 400 });
 
-
+        console.log("HELLO",proj_public_id)
         if (!fetch_new_issues) {
             // TODO: get tasks from the database
             // and return
@@ -63,7 +64,7 @@ Deno.serve(async (req) => {
             // - get issues from github
             // - if there are new issues, insert them into DB
             // - fetch new tasks and return
-            const tasks = await fetchTasksFromGithub(req, proj_public_id);
+            // const tasks = await fetchTasksFromGithub(req, proj_public_id);
             // await insertTasksIntoDB(req, tasks, proj_public_id);
         }
 
@@ -144,22 +145,17 @@ async function insertTasksIntoDB(req: Request, tasks: GithubIssueResponse[], pro
     console.log(tasks)
     const { data, error } = await supabase.rpc("batch_upsert_tasks", {
         proj_public_id: projPublicId,
-        tasks_json: tasks.map(task => {
-            const task_id = uuidv7();
-            const publicId = nanoid();
-            return {
-                id: task_id,
-                public_id: publicId,
-                external_id: String(task.id),
-                external_key: String(task.number),
-                external_url: task.html_url,
-                title: task.title,
-                status: task.state,
-                assignees: task.assignees,
-                created_at: task.created_at,
-                updated_at: task.updated_at
-            }
-        })
+        tasks_json: tasks.map(task => ({
+            public_id: nanoid(),
+            external_id: String(task.id),
+            external_key: String(task.number),
+            external_url: task.html_url,
+            title: task.title,
+            status: task.state,
+            assignees: task.assignees,
+            created_at: task.created_at,
+            updated_at: task.updated_at
+        }))
     })
 
     if (error) throw error;
