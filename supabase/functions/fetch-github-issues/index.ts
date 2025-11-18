@@ -54,21 +54,22 @@ Deno.serve(async (req) => {
 
         if (!proj_public_id || !fetch_new_issues) return Response.json({ success: false }, { status: 400 });
 
-
+        let tasks: TaskResponse[] = [];
         if (!fetch_new_issues) {
             // TODO: get tasks from the database
             // and return
-            const tasks = await fetchTasksFromDB(proj_public_id);
+            tasks = await fetchTasksFromDB(proj_public_id);
         } else {
             // TODO
             // - get issues from github
             // - if there are new issues, insert them into DB
             // - fetch new tasks and return
-            const tasks = await fetchTasksFromGithub(req, proj_public_id);
-            await insertTasksIntoDB(req, tasks, proj_public_id);
+            const githubIssues = await fetchTasksFromGithub(req, proj_public_id);
+            await insertTasksIntoDB(req, githubIssues, proj_public_id);
+            tasks = await fetchTasksFromDB(proj_public_id);
         }
 
-        return new Response(JSON.stringify({ success: true }),
+        return new Response(JSON.stringify({ success: true, tasks }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 },
         )
     }
@@ -142,22 +143,26 @@ async function insertTasksIntoDB(req: Request, tasks: GithubIssueResponse[], pro
     const alphanumericAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const nanoid = customAlphabet(alphanumericAlphabet, 12);
 
-    console.log(tasks.length)
-    const { data, error } = await supabase.rpc("batch_upsert_tasks", {
-        proj_public_id: projPublicId,
-        tasks_json: tasks.map(task => ({
-            public_id: nanoid(),
-            external_id: String(task.id),
-            external_key: String(task.number),
-            external_url: task.html_url,
-            title: task.title,
-            status: task.state,
-            assignees: task.assignees,
-            created_at: task.created_at,
-            updated_at: task.updated_at
-        }))
-    })
+    while (tasks.length > 0) {
+        const taskChunks = tasks.splice(0, 1000);
 
-    if (error) throw error;
+        const { error } = await supabase.rpc("batch_upsert_tasks", {
+            proj_public_id: projPublicId,
+
+            tasks_json: taskChunks.map(task => ({
+                public_id: nanoid(),
+                external_id: String(task.id),
+                external_key: String(task.number),
+                external_url: task.html_url,
+                title: task.title,
+                status: task.state,
+                assignees: task.assignees,
+                created_at: task.created_at,
+                updated_at: task.updated_at
+            }))
+        });
+
+        if (error) throw error;
+    }
 }
 
