@@ -1,7 +1,7 @@
 "use client";
 
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuAction, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Calendar, ChevronsUpDown, Hexagon, Home, Inbox, MoreHorizontal, Plus, Settings, SquareChartGantt } from "lucide-react";
+import { Calendar, ChevronRight, ChevronsUpDown, Hexagon, Home, Inbox, MoreHorizontal, Plus, Settings, SquareChartGantt } from "lucide-react";
 import Link from "next/link";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -205,9 +205,9 @@ function ProjectSideBarMenuItem({ orgId, project, deleteProjectFromList }: {
                 <Collapsible className="group/collapsible" >
                     <SidebarMenuButton asChild className="cursor-pointer">
                         <CollapsibleTrigger>
+                            <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90" />
                             <SquareChartGantt />
                             <span className="font-semibold">{project.projName}</span>
-                            {/* <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" /> */}
                         </CollapsibleTrigger>
                     </SidebarMenuButton>
 

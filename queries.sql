@@ -39,13 +39,14 @@ CREATE TABLE organization_integrations (
 CREATE TYPE user_role AS ENUM ('admin', 'pm', 'contractor');
 
 CREATE TABLE organization_users (
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     role user_role NOT NULL DEFAULT 'contractor',  -- 'admin', 'pm', 'contractor',
     hourly_rate DECIMAL(10,2) DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
-    PRIMARY KEY(user_id, organization_id)
+    UNIQUE(user_id, organization_id)
 );
 
 CREATE TABLE integration_users (
@@ -835,7 +836,7 @@ create or replace view tasks_view with(security_invoker=true) as
         t.updated_at,
 
         coalesce(
-            array_agg(distinct ta.user_id) filter (where ta.user_id is not null), '{}'
+            array_agg(distinct ta.integration_user_id) filter (where ta.integration_user_id is not null), '{}'
         ) as assignees,
 
         coalesce(
@@ -846,7 +847,7 @@ create or replace view tasks_view with(security_invoker=true) as
 
         coalesce(
             sum(
-               coalesce(tl.hours, 0) * coalesce(uo.hourly_rate, 0)
+               coalesce(tl.hours, 0) * coalesce(ou.hourly_rate, 0)
             ), 0
         ) as cost
 
@@ -854,7 +855,7 @@ create or replace view tasks_view with(security_invoker=true) as
     join projects p on p.id = t.project_id
     left join task_assignees ta on ta.task_id = t.id
     left join time_logs tl on tl.task_id = t.id
-    left join organization_users uo on uo.user_id = tl.user_id
+    left join organization_users ou on ou.user_id = tl.user_id
     group by t.id
     order by t.id;
      
@@ -867,9 +868,9 @@ to authenticated
 using (
   exists (
     select 1
-    from project_users up
-    where up.project_id = projects.id
-    and up.user_id = auth.uid()
+    from project_users pu
+    where pu.project_id = projects.id
+    and pu.user_id = auth.uid()
   )
 );
 
@@ -934,7 +935,7 @@ using(
         and user_id = auth.uid()
         and role in ('admin', 'pm')
     )
-)
+);
 
 create policy "user can create org integrations"
 on organization_integrations
