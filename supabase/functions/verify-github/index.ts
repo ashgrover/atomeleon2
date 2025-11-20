@@ -56,7 +56,7 @@ async function getUserAccessToken(userCode: string) {
 
     const data = await response.json();
     const userAccessToken = data.access_token;
-    console.log("DATA", data, "status", response.status, response.ok)
+    console.log("status", response.status, response.ok)
     return userAccessToken;
 }
 

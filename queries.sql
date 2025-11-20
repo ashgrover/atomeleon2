@@ -296,7 +296,7 @@ as $$
         select 
             ou.id,
             proj_id 
-        from organization_users ou
+        from public.organization_users ou
         where ou.user_id = auth.uid();
 
         return proj_id;
@@ -332,7 +332,7 @@ as $$
                     exists(
                         select 1
                         from public.project_users pu
-                        join organization_users ou on ou.id = pu.org_user_id
+                        join public.organization_users ou on ou.id = pu.org_user_id
                         where pu.project_id = p.id
                         and ou.user_id = auth.uid()
                         and ou.role = 'pm'
@@ -743,9 +743,7 @@ create or replace view user_projects_view with(security_invoker=true) as
         p.start_date,
         p.end_date,
         p.created_at,
-        p.updated_at,
-        p.repo_url,
-        p.org_integration_id
+        p.updated_at
     from projects p
     join organizations o on p.organization_id = o.id;
 
@@ -759,8 +757,7 @@ create or replace view project_details_view with(security_invoker=true) as
         start_date,
         end_date,
         created_at,
-        updated_at,
-        repo_url
+        updated_at
     from projects;
 
 create or replace view project_integrations_view with(security_invoker=true) as
@@ -871,14 +868,14 @@ as permissive
 for update
 to authenticated
 using (can_user_edit_project(projects.id))
-with check (can_user_edit_project(projects.id))
+with check (can_user_edit_project(projects.id));
 
 create policy "user can delete projects"
 on "public"."projects"
 as permissive
 for delete
 to authenticated
-using (can_user_edit_project(projects.id))
+using (can_user_edit_project(projects.id));
 
 create policy "user can select org integrations"
 on organization_integrations
