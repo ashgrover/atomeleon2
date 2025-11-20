@@ -12,7 +12,7 @@ CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     public_id TEXT UNIQUE NOT NULL,
     org_name TEXT NOT NULL,
-    org_type org_type NOT NULL DEFAULT 'none'
+    org_type org_type NOT NULL DEFAULT 'none',
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -74,7 +74,7 @@ CREATE TABLE projects (
     start_date TIMESTAMPTZ DEFAULT now(),
     end_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TYPE resource_type AS ENUM (
