@@ -51,7 +51,7 @@ CREATE TABLE organization_users (
 
 CREATE TABLE integration_users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    org_user_id UUID REFERENCES organization_users(id) ON DELETE SET NULL,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     org_integration_id UUID NOT NULL REFERENCES organization_integrations(id) ON DELETE CASCADE,
     external_user_id TEXT NOT NULL,
@@ -100,13 +100,13 @@ CREATE TABLE project_integrations (
     last_synced_at TIMESTAMPTZ DEFAULT NULL,
     last_webhook_at TIMESTAMPTZ DEFAULT NULL,
     unique (project_id, org_integration_id)
-)
+);
 
 
 CREATE TABLE project_users (
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    PRIMARY KEY (project_id, user_id)
+    org_user_id UUID NOT NULL REFERENCES organization_users(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, org_user_id)
 );
 
 CREATE TABLE labels (
@@ -148,7 +148,7 @@ CREATE TABLE task_assignees (
 CREATE TABLE time_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    org_user_id UUID NOT NULL REFERENCES organization_integrations(id) ON DELETE CASCADE,
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
     log_date TIMESTAMPTZ NOT NULL,
     hours DECIMAL(10,2) NOT NULL,
@@ -161,7 +161,7 @@ CREATE TYPE timesheet_status AS ENUM ('draft', 'submitted', 'approved', 'rejecte
 CREATE TABLE timesheets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     public_id TEXT UNIQUE NOT NULL,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    org_user_id UUID NOT NULL REFERENCES organization_integrations(id) ON DELETE CASCADE,
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE timesheets (
     rejected_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
-    UNIQUE(user_id, organization_id, start_date),
+    UNIQUE(org_user_id, organization_id, start_date),
     CHECK(end_date > start_date)
 );
 
@@ -179,11 +179,11 @@ CREATE TABLE timesheet_entry (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
     organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     timesheet_id UUID NOT NULL REFERENCES timesheets(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    org_user_id UUID NOT NULL REFERENCES organization_integrations(id) ON DELETE CASCADE,
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
     entry_date TIMESTAMPTZ NOT NULL,
     hours_logged DECIMAL(10,2) NOT NULL,
-    UNIQUE(timesheet_id, user_id, task_id, entry_date)
+    UNIQUE(timesheet_id, org_user_id, task_id, entry_date)
 );
 
 -- Indexes
@@ -192,36 +192,9 @@ CREATE INDEX idx_labels_project_id ON labels(project_id);
 CREATE INDEX idx_task_labels_label_id ON task_labels(label_id);
 CREATE INDEX idx_task_labels_task_id ON task_labels(task_id);
 CREATE INDEX idx_time_logs_task_id ON time_logs(task_id);
-CREATE INDEX idx_time_logs_user_id ON time_logs(user_id);
-CREATE INDEX idx_timesheets_user_id ON timesheets(user_id);
+CREATE INDEX idx_time_logs_user_id ON time_logs(org_user_id);
+CREATE INDEX idx_timesheets_user_id ON timesheets(org_user_id);
 CREATE INDEX idx_timesheet_entry_timesheet_id ON timesheet_entry(timesheet_id);
-
-
-CREATE OR REPLACE FUNCTION cleanup_user_projects_on_project_org_change()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Delete user_project links where user no longer belongs to the new org
-    DELETE FROM project_users
-    WHERE project_id = NEW.id
-      AND user_id NOT IN (
-          SELECT user_id
-          FROM organization_users
-          WHERE organization_id = NEW.organization_id
-      );
-
-    -- -- Update the organization_id in project_users for remaining users
-    -- UPDATE project_users
-    -- SET organization_id = NEW.organization_id
-    -- WHERE project_id = NEW.id;
-
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_cleanup_user_projects_on_project_org_change
-AFTER UPDATE OF organization_id ON projects
-FOR EACH ROW
-EXECUTE FUNCTION cleanup_user_projects_on_project_org_change();
 
 
 -- uuidv7 function, from: https://gist.github.com/kjmph/5bd772b2c2df145aa645b837da7eca74
@@ -237,14 +210,14 @@ begin
   -- then set version 7 by flipping the 2 and 1 bit in the version 4 string
   return encode(
     set_bit(
-      set_bit(
-        overlay(uuid_send(gen_random_uuid())
-                placing substring(int8send(floor(extract(epoch from clock_timestamp()) * 1000)::bigint) from 3)
-                from 1 for 6
+        set_bit(
+            overlay(uuid_send(gen_random_uuid())
+                    placing substring(int8send(floor(extract(epoch from clock_timestamp()) * 1000)::bigint) from 3)
+                    from 1 for 6
+            ),
+            52, 1
         ),
-        52, 1
-      ),
-      53, 1
+        53, 1
     ),
     'hex')::uuid;
 end
@@ -319,8 +292,12 @@ as $$
         values (public_id, org_id, proj_name, proj_desc, budget)
         returning id into proj_id;
 
-        insert into public.project_users(user_id, project_id)
-        values(auth.uid(), proj_id);
+        insert into public.project_users(org_user_id, project_id)
+        select 
+            ou.id,
+            proj_id 
+        from organization_users ou
+        where ou.user_id = auth.uid();
 
         return proj_id;
 
@@ -343,39 +320,25 @@ as $$
             select 1
             from public.projects p
             where p.id = proj_id
-            and exists(
-                select 1
-                from public.organization_users uo
-                where uo.organization_id = p.organization_id
-                and uo.user_id = auth.uid()
-                and uo.role in ('admin', 'pm')
-            )
-            and exists(
-                select 1
-                from public.project_users up
-                where up.project_id = p.id
-                and up.user_id = auth.uid()
+            and (
+                    exists(
+                        select 1
+                        from public.organization_users ou
+                        where ou.organization_id = p.organization_id
+                        and ou.user_id = auth.uid()
+                        and ou.role = 'admin'
+                )
+                or  
+                    exists(
+                        select 1
+                        from public.project_users pu
+                        join organization_users ou on ou.id = pu.org_user_id
+                        where pu.project_id = p.id
+                        and ou.user_id = auth.uid()
+                        and ou.role = 'pm'
+                )
             )
         );
-    end;
-$$;
-
-create or replace function can_user_edit_project_integrations(
-    org_integ_id uuid
-)
-returns boolean
-language plpgsql
-set search_path = ''
-as $$
-    begin
-        return exists (
-            select 1
-            from public.organization_integrations ot
-            join public.organization_users uo on uo.organization_id = ot.organization_id
-            where id = org_integ_id
-            and uo.user_id = auth.uid()
-            and uo.role in ('admin', 'pm')
-    );
     end;
 $$;
 
@@ -866,17 +829,27 @@ on projects
 for select
 to authenticated
 using (
-  exists (
-    select 1
-    from project_users pu
-    where pu.project_id = projects.id
-    and pu.user_id = auth.uid()
-  )
+    exists (
+        select 1
+        from project_users pu
+        join organization_users ou on ou.id = pu.org_user_id
+        where pu.project_id = projects.id
+        and ou.user_id = auth.uid()
+    )
 );
 
 create policy "user can access their projects"
 on project_users
-using (auth.uid() = project_users.user_id);
+for select
+to authenticated
+using (
+    exists(
+        select 1
+        from organization_users u
+        where u.id = project_users.org_user_id
+        and u.user_id = auth.uid()
+    )
+);
 
 
 create policy "user can create project"
@@ -884,12 +857,12 @@ on projects
 for insert
 to authenticated
 with check (
- organization_id in (
-  select organization_id 
-  from organization_users
-  where user_id = auth.uid()
-  and role in ('admin', 'pm')
- )
+    projects.organization_id in (
+        select organization_id 
+        from organization_users
+        where user_id = auth.uid()
+        and role in ('admin', 'pm')
+    )
 );
 
 create policy "user can edit projects"
@@ -905,22 +878,7 @@ on "public"."projects"
 as permissive
 for delete
 to authenticated
-using (
-     exists (
-        select 1 
-        from public.organization_users
-        where user_id = auth.uid()
-        and organization_id = projects.organization_id
-        and role in ('admin', 'pm')
-    )
-    and
-    exists (
-        select 1
-        from public.project_users
-        where user_id = auth.uid()
-        and project_id = projects.id
-    )
-)
+using (can_user_edit_project(projects.id))
 
 create policy "user can select org integrations"
 on organization_integrations
@@ -952,43 +910,25 @@ with check (
     )
 );
 
--- TODO: Fix these policies for project integrations
 create policy "user can select project integrations"
 on project_integrations
 as permissive
 for select
 to authenticated
-using (can_user_edit_project_integrations(project_integrations.org_integration_id));
+using (can_user_edit_project(project_integrations.project_id));
 
 create policy "user can add project integrations"
 on project_integrations
 as permissive
 for insert
 to authenticated
-with check (can_user_edit_project_integrations(project_integrations.org_integration_id));
+with check (can_user_edit_project(project_integrations.project_id));
 
 create policy "user can update project integrations"
 on project_integrations
 as permissive
 for update
 to authenticated
-using (can_user_edit_project_integrations(project_integrations.org_integration_id))
-with check (can_user_edit_project_integrations(project_integrations.org_integration_id));
-
-
-
--- For later
-ALTER TABLE project_users
-  ADD CONSTRAINT fk_user_projects_project_org
-    FOREIGN KEY (project_id, organization_id)
-    REFERENCES projects(id, organization_id)
-    ON DELETE CASCADE
-    DEFERRABLE INITIALLY DEFERRED;
-
-ALTER TABLE project_users
-  ADD CONSTRAINT fk_user_projects_user_org
-    FOREIGN KEY (user_id, organization_id)
-    REFERENCES organization_users(user_id, organization_id)
-    ON DELETE CASCADE
-    DEFERRABLE INITIALLY DEFERRED;
+using (can_user_edit_project(project_integrations.project_id))
+with check (can_user_edit_project(project_integrations.project_id));
 
