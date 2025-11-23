@@ -1,9 +1,11 @@
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v7(),
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
+CREATE TABLE user_profiles (
+    id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    display_name TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    PRIMARY KEY(id)
 );
 
 CREATE TYPE org_type AS ENUM ('company', 'agency', 'startup', 'nonprofit', 'educational', 'government', 'none');
@@ -56,6 +58,7 @@ CREATE TABLE integration_users (
     org_integration_id UUID NOT NULL REFERENCES organization_integrations(id) ON DELETE CASCADE,
     external_user_id TEXT NOT NULL,
     external_username TEXT,
+    external_user_url TEXT,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     UNIQUE(org_integration_id, external_user_id)
@@ -128,6 +131,7 @@ CREATE TABLE tasks (
     project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     status TEXT,
+    estimated_hours DECIMAL(10,2),
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
     UNIQUE(organization_id, project_id, external_id)
@@ -141,8 +145,8 @@ CREATE TABLE task_labels (
 
 CREATE TABLE task_assignees (
     task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
-    integration_user_id UUID NOT NULL REFERENCES integration_users(id) ON DELETE CASCADE,
-    PRIMARY KEY (task_id, integration_user_id)
+    integ_user_id UUID NOT NULL REFERENCES integration_users(id) ON DELETE CASCADE,
+    PRIMARY KEY (task_id, integ_user_id)
 );
 
 CREATE TABLE time_logs (
@@ -783,6 +787,8 @@ create or replace view project_github_repo_view with(security_invoker=true) as
     join project_integrations pi on pi.project_id = p.id
     join organization_integrations ot on ot.id = pi.org_integration_id;
 
+
+-- Turn this into a function
 create or replace view tasks_view with(security_invoker=true) as
     select
         p.public_id as proj_public_id,
@@ -796,7 +802,12 @@ create or replace view tasks_view with(security_invoker=true) as
         t.updated_at,
 
         coalesce(
-            array_agg(distinct ta.integration_user_id) filter (where ta.integration_user_id is not null), '{}'
+            array_agg(
+                json_build_object(
+                    'display_name', up.display_name,
+                    'user_url', itu.external_user_url
+                )
+            ) filter (where ta.integ_user_id is not null), '{}'
         ) as assignees,
 
         coalesce(
@@ -815,7 +826,10 @@ create or replace view tasks_view with(security_invoker=true) as
     join projects p on p.id = t.project_id
     left join task_assignees ta on ta.task_id = t.id
     left join time_logs tl on tl.task_id = t.id
-    left join organization_users ou on ou.user_id = tl.user_id
+    left join organization_users ou on ou.id = tl.org_user_id
+    left join integration_users itu on itu.id = ta.integ_user_id
+    left join organization_users ou2 on ou2.id = itu.org_user_id
+    left join user_profiles up on up.id = ou2.user_id
     group by t.id
     order by t.id;
      

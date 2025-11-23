@@ -64,9 +64,10 @@ Deno.serve(async (req) => {
             // - get issues from github
             // - if there are new issues, insert them into DB
             // - fetch new tasks and return
-            const githubIssues = await fetchTasksFromGithub(req, proj_public_id);
-            await insertTasksIntoDB(req, githubIssues, proj_public_id);
-            tasks = await fetchTasksFromDB(proj_public_id);
+            
+            // const githubIssues = await fetchTasksFromGithub(req, proj_public_id);
+            // await insertTasksIntoDB(req, githubIssues, proj_public_id);
+            // tasks = await fetchTasksFromDB(proj_public_id);
         }
 
         return new Response(JSON.stringify({ success: true, tasks }),
